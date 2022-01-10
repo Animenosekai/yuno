@@ -1,4 +1,5 @@
 import typing
+import inspect
 
 import bson
 import pymongo.collection
@@ -21,6 +22,8 @@ class SakiDocument(object):
         super().__setattr__("__collection__", collection,)
         super().__setattr__("__attributes__", [attribute for attribute in set(
             ["_id"] + list(dir(self)) + list(self.__annotations__.keys())) if not attribute.startswith("__")])
+
+        # we also need if attribute is inspect.isfunction
 
         if data is None:
             projection = {attribute: True for attribute in self.__attributes__ if not attribute in self.__lazy__attributes__}
@@ -100,3 +103,6 @@ class SakiDocument(object):
                 if key.startswith("__"):
                     data.pop(key, None)
         return data
+
+    def __repr__(self) -> str:
+        return "SakiDocument(_id={}, collection={})".format(self._id, self.__collection__.name)

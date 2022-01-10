@@ -50,17 +50,17 @@ class SakiTypeEncoder():
         _types = typing.get_args(_type)
         length = len(_types)
         if length <= 0:
-            return self.DICT({key: self.default(val, None, field="{}.{}".format(field, key), document=document) for key, val in dict(o).items()})
+            return self.DICT(field=field, saki_document=document, values={key: self.default(val, None, field="{}.{}".format(field, key), document=document) for key, val in dict(o).items()})
         elif length <= 2:
             key__type, value__type = (str, _types[0]) if length == 1 else (_types[0], _types[1])
-            return self.DICT({self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k)) for k, v in o.items()})
+            return self.DICT(field=field, saki_document=document, values={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k)) for k, v in o.items()})
         length -= 1
         for index, (key, value) in enumerate(o.items()):
             if length > index:
                 o[str(key)] = self.default(value, _types[index], field="{}.{}".format(field, key), document=document)
             else:
                 o[str(key)] = self.default(value, _types[length], field="{}.{}".format(field, key), document=document)
-        return self.DICT(o)
+        return self.DICT(field=field, saki_document=document, values=o)
 
     def encode_iterable(self, i: typing.Iterable[typing.Any], _type: T, field: str = "", document=None) -> T:
         _types = typing.get_args(_type)
