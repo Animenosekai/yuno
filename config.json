@@ -1,0 +1,29 @@
+{
+    "systemLog": { // aliased to "log"
+        "verbosity": 0, // 0 ~ 5
+        "path": "path/to/log/file",
+        "logAppend": true, // aliased to "log.append"
+        "timeStampFormat": "iso8601-utc | iso8601-local", // aliased to "log.timezone"
+        "traceAllExceptions": false // debug: true
+    },
+    "processManagement": {
+        "fork": true // aliased to "fork"
+    },
+    "cloud": {
+        "monitoring": {
+            "free": {
+                "state": false // aliased to "monitoring"
+            }
+        }
+    },
+    "net": { // aliased to ""
+        "port": 27017,
+        "bindIp": "127.0.0.1", // aliased to "host"
+        "maxIncomingConnections": 65536, // aliased to "maxConnections"
+        "wireObjectCheck": true, // aliased to "json_validation"
+        "ipv6": true
+    },
+    "storage": {
+        "dbPath": "path/to/db/folder" // aliased to "path"
+    }
+}
