@@ -6,7 +6,6 @@ client = MongoClient()
 database = client["test"]
 collection = database["account"]
 
-
 with Timer() as timer:
     class Account(SakiDocument):
         username: str = "default_username"
@@ -51,4 +50,5 @@ with Timer() as timer:
     # print(a.dict_test.keys())
     # print("c" in a.dict_test)
     # print(a.dict_test.__contains__("c"))
+
 print(timer.time)

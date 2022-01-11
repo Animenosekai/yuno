@@ -32,6 +32,7 @@ class SakiList(list):
                 super().__setattr__(attribute, storage.__getattribute__(attribute))  # if this fails, __storage__ is not a list, which should not happen
 
     def append(self, o: typing.Any) -> None:
+        o = encoder.TypeEncoder.default(o, field="{}.{}".format(self.__field__, len(self.__storage__)), document=self.__document__)
         self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$push": {self.__field__: encoder.BSONEncoder.default(o)}})
         self.__storage__.append(o)
 
@@ -40,6 +41,9 @@ class SakiList(list):
         self.__storage__.clear()
 
     def extend(self, iterable: typing.Iterable[typing.Any]) -> None:
+        length = len(self.__storage__)
+        iterable = [encoder.TypeEncoder.default(element, field="{}.{}".format(self.__field__, length + index))
+                    for index, element in enumerate(iterable)]
         self.__document__.__collection__.update_one({"_id": self.__document__._id}, {
                                                     "$push": {self.__field__: {"$each": encoder.BSONEncoder.default(iterable)}}})
         self.__storage__.extend(iterable)
@@ -47,7 +51,9 @@ class SakiList(list):
     def pop(self, index: typing.SupportsIndex = ...) -> typing.Any:
         copied = self.__storage__.copy()
         value = copied.pop(index)
-        self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$set": {self.__field__: encoder.BSONEncoder.default(copied)}})
+        bson = encoder.BSONEncoder.default(copied)
+        copied = [encoder.TypeEncoder.default(element, field="{}.{}".format(self.__field__, index)) for index, element in enumerate(bson)]
+        self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
         return value
 
@@ -55,19 +61,26 @@ class SakiList(list):
         self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$pull": {self.__field__: encoder.BSONEncoder.default(value)}})
         try:
             self.__storage__.remove(value)
+            bson = encoder.BSONEncoder.default(self.__storage__)
+            copied = [encoder.TypeEncoder.default(element, field="{}.{}".format(self.__field__, index)) for index, element in enumerate(bson)]
+            self.__storage__ = copied
         except ValueError:  # they are not raised by MongoDB
             pass
 
     def reverse(self) -> None:
         copied = self.__storage__.copy()
         copied.reverse()
-        self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$set": {self.__field__: encoder.BSONEncoder.default(copied)}})
+        bson = encoder.BSONEncoder.default(copied)
+        copied = [encoder.TypeEncoder.default(element, field="{}.{}".format(self.__field__, index)) for index, element in enumerate(bson)]
+        self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
 
     def sort(self, key: typing.Callable[[typing.Any], typing.Any] = None, reverse: bool = False) -> None:
         copied = self.__storage__.copy()
         copied.sort(key=key, reverse=reverse)
-        self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$set": {self.__field__: encoder.BSONEncoder.default(copied)}})
+        bson = encoder.BSONEncoder.default(copied)
+        copied = [encoder.TypeEncoder.default(element, field="{}.{}".format(self.__field__, index)) for index, element in enumerate(bson)]
+        self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
 
     def __repr__(self) -> str:
@@ -79,15 +92,19 @@ class SakiList(list):
 
     def __imul__(self, x: int) -> list[typing.Any]:
         copied = self.__storage__ * x
-        self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$set": {self.__field__: encoder.BSONEncoder.default(copied)}})
+        bson = encoder.BSONEncoder.default(copied)
+        copied = [encoder.TypeEncoder.default(element, field="{}.{}".format(self.__field__, index)) for index, element in enumerate(bson)]
+        self.__document__.__collection__.update_one({"_id": self.__document__._id}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
         return self
 
     def __setitem__(self, key: typing.Union[int, slice], value: typing.Any) -> None:
         if isinstance(key, slice):
             copied = self.__storage__.__setitem__(key, value)
+            bson = encoder.BSONEncoder.default(copied)
+            copied = [encoder.TypeEncoder.default(element, field="{}.{}".format(self.__field__, index)) for index, element in enumerate(bson)]
             self.__document__.__collection__.update_one({"_id": self.__document__._id}, {
-                                                        "$set": {self.__field__: encoder.BSONEncoder.default(copied)}})
+                                                        "$set": {self.__field__: bson}})
             self.__storage__ = copied
         else:
             try:
@@ -95,6 +112,8 @@ class SakiList(list):
                 self.__document__.__collection__.update_one({"_id": self.__document__._id}, {
                                                             "$set": {"{}.{}".format(self.__field__, key): encoder.BSONEncoder.default(value)}})
                 self.__storage__.__setitem__(key, value)
+                bson = encoder.BSONEncoder.default(self.__storage__)
+                self.__storage__ = [encoder.TypeEncoder.default(element, field="{}.{}".format(self.__field__, index)) for index, element in enumerate(bson)]
             except ValueError as err:
                 raise TypeError("list indices must be integers or slices, not str") from err
 

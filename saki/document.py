@@ -1,18 +1,18 @@
 import typing
-import inspect
 
 import bson
 import pymongo.collection
 
 from saki import encoder
 
+# TODO: Change the Document to have a __storage__ with the data
 
 class SakiDocument(object):
     __lazy__attributes__ = {}
     __collection__: pymongo.collection.Collection
     _id: typing.Union[bson.ObjectId, typing.Any]
 
-    def __init__(self, collection: pymongo.collection.Collection, _id: typing.Union[bson.ObjectId, typing.Any] = None, data: dict[str, typing.Any] = None, ) -> None:
+    def __init__(self, collection: pymongo.collection.Collection, _id: typing.Union[bson.ObjectId, typing.Any] = None, data: dict[str, typing.Any] = None) -> None:
         if _id is None and data is None:
             raise ValueError("Either _id or data must be provided.")
 
@@ -71,6 +71,9 @@ class SakiDocument(object):
 
         return super().__getattribute__(__name)
 
+    def __getitem__(self, key: str) -> typing.Any:
+        return self.__getattribute__(key)
+
     def __setattr__(self, __name: str, __value: typing.Any, update: bool = True) -> None:
         __name = str(__name)
 
@@ -81,6 +84,15 @@ class SakiDocument(object):
         if update and __value != super().__getattribute__(__name):
             self.__collection__.update_one({"_id": self._id}, {"$set": {__name: encoder.BSONEncoder.default(__value)}})
         super().__setattr__(__name, __value)
+
+    def __setitem__(self, key: str, value: typing.Any) -> None:
+        self.__setattr__(key, value)
+
+    def __delattr__(self, name: str) -> None:
+        self.__collection__.update_one({"_id": self._id}, {"$unset": {name: True}})
+
+    def __delitem__(self, key: str) -> None:
+        self.__delattr__(key)
 
     @property
     def __dict__(self, remove: typing.List[str] = None, builtins: bool = False) -> typing.Dict[str, typing.Any]:
@@ -105,4 +117,4 @@ class SakiDocument(object):
         return data
 
     def __repr__(self) -> str:
-        return "SakiDocument(_id={}, collection={})".format(self._id, self.__collection__.name)
+        return "SakiDocument(_id={}, collection='{}')".format(self._id, self.__collection__.name)
