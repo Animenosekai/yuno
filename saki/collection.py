@@ -3,18 +3,19 @@ import pymongo.database
 
 from saki import encoder, document
 
-MongoDBIndexDirection = typing.TypeVar("MongoDBIndexDirection")
+IndexDirection = typing.TypeVar("IndexDirection")
 
 
 class SakiCollection(object):
+    __type__ = document.SakiDocument
+
     def __init__(self, database: pymongo.database.Database, name: str = "__saki_test__") -> None:
         self.__database__ = database
         self.__collection__ = database[name]
         self.__name__ = str(name)
-        super().__setattr__("__attributes__", [attribute for attribute in set(
-            ["_id"] + list(dir(self)) + list(self.__annotations__.keys())) if not attribute.startswith("__")])
+        self.__annotations__ = self.__annotations__ if hasattr(self, "__annotations__") else {}
 
-    def find(self, **kwargs) -> list[document.SakiDocument]:
+    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, **kwargs) -> list[document.SakiDocument]:
         """
         Find documents in the collection
 
@@ -31,17 +32,22 @@ class SakiCollection(object):
          list[SakiDocument]
             A list of documents
         """
-        annotations = self.__annotations__ if hasattr(self, "__annotations__") else {}
+        filter = filter if filter is not None else {}
+        filter.update(kwargs)
+        filter = {str(k): encoder.BSONEncoder.default(v) for k, v in filter.items()}
+        projection = {str(field): True for field in include}
+        projection.update({str(field): False for field in exclude})
         results = []
-        for doc in self.__collection__.find({str(k): encoder.BSONEncoder.default(v) for k, v in kwargs.items()}):
+        for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit):
             name = doc.get("_id")
-            if name in annotations:
-                results.append(annotations[name](self.__collection__, name, doc))
+            collection = super().__getattribute__("__collection__")
+            if name in self.__annotations__:
+                results.append(self.__annotations__[name](collection, name, doc))
             else:
-                results.append(document.SakiDocument(self.__collection__, name, doc))
+                results.append(document.SakiDocument(collection, name, doc))
         return results
 
-    def index(self, keys: typing.Union[str, list[tuple[str, MongoDBIndexDirection]]], name: str = None, unique: bool = True, background: bool = True, sparse: bool = True, **kwargs) -> None:
+    def index(self, keys: typing.Union[str, list[tuple[str, IndexDirection]]], name: str = None, unique: bool = True, background: bool = True, sparse: bool = True, **kwargs) -> None:
         """
         Creates an index for this collection
         """
@@ -68,5 +74,4 @@ class SakiCollection(object):
         return self.__getitem__(name)
 
     def __getitem__(self, name: str) -> document.SakiDocument:
-        annotations = self.__annotations__ if hasattr(self, "__annotations__") else {}
-        return annotations[name](self.__collection__, name) if name in annotations else document.SakiDocument(self.__collection__, name)
+        return self.__annotations__[name](self.__collection__, name) if name in self.__annotations__ else document.SakiDocument(self.__collection__, name)

@@ -5,7 +5,9 @@ import pymongo.collection
 
 from saki import encoder
 
-# TODO: Change the Document to have a __storage__ with the data
+# TODO: Use SakiDict --> which might be renamed SakiObject and use annotations more like SakiDocument
+# -TODO-: Change the Document to have a __storage__ with the data
+
 
 class SakiDocument(object):
     __lazy__attributes__ = {}
@@ -19,7 +21,7 @@ class SakiDocument(object):
         if not hasattr(self, "__annotations__"):
             super().__setattr__("__annotations__", {})
 
-        super().__setattr__("__collection__", collection,)
+        super().__setattr__("__collection__", collection)
         super().__setattr__("__attributes__", [attribute for attribute in set(
             ["_id"] + list(dir(self)) + list(self.__annotations__.keys())) if not attribute.startswith("__")])
 
@@ -58,7 +60,9 @@ class SakiDocument(object):
 
     @__lazy__.setter
     def __lazy__(self, value: typing.Iterable[str]) -> None:
-        self.__lazy__attributes__ = {key: False for key in value if key != "_id"}
+        lazy_attributes = self.__lazy__attributes__
+        self.__lazy__attributes__ = {key: lazy_attributes.get(key, False) for key in value}
+        self.__lazy__attributes__.pop("_id", None)
 
     def __getattribute__(self, __name: str) -> typing.Any:
         __name = str(__name)
@@ -117,4 +121,6 @@ class SakiDocument(object):
         return data
 
     def __repr__(self) -> str:
-        return "SakiDocument(_id={}, collection='{}')".format(self._id, self.__collection__.name)
+        if self.__class__.__name__ == "SakiDocument":
+            return "SakiDocument(_id={}, collection='{}')".format(self._id, self.__collection__.name)
+        return "SakiDocument(_id={}, collection='{}', type='{}')".format(self._id, self.__collection__.name, self.__class__.__name__)

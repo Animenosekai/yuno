@@ -1,4 +1,5 @@
 from nasse.timer import Timer
+from saki.collection import SakiCollection
 from saki.document import SakiDocument
 from pymongo import MongoClient
 
@@ -12,6 +13,15 @@ with Timer() as timer:
         password: str = "default_password"
         list_test: list[int] = []
         dict_test: dict
+
+    class TestCollection(SakiCollection):
+        a: Account
+
+    test_collection = TestCollection(database, "account")
+
+    print(test_collection.find())
+    print(test_collection.find(username="test"))
+    print(test_collection.find(username="hello"))
 
     a = Account(collection, _id="a")
     # print(a.username)
