@@ -1,3 +1,5 @@
+
+
 import datetime
 import io
 import re
@@ -6,16 +8,16 @@ import typing
 import bson
 from nasse import logging, utils
 
-from saki import objects
-
 
 class LazyObject():
     def __init__(self, field: str) -> None:
-        self.field = str(field)
+        self.field = str(field).strip(".")
 
     def __repr__(self) -> str:
         return "LazyObject({})".format(self.field)
 
+
+from saki import object, objects  # noqa
 
 BSON_ENCODABLE = (bool, int, bson.Int64, float, str, datetime.datetime, bson.Regex, re.Pattern, bson.Binary, bson.ObjectId, bson.DBRef, bson.Code)
 
@@ -38,6 +40,8 @@ class SakiBSONEncoder():
     def default(self, o: typing.Any) -> typing.Any:
         if o is None:
             return None
+        if isinstance(o, object.SakiObject):
+            o = o.__storage__
         # https://pymongo.readthedocs.io/en/stable/api/bson/index.html
         elif isinstance(o, BSON_ENCODABLE):
             return o
@@ -60,8 +64,6 @@ IMMUTABLES = (bool, int, bson.Int64, float, str, bson.Binary, bson.ObjectId, bso
 
 class SakiTypeEncoder():
     BSON_SAFE_ENCODER = SakiBSONEncoder()
-    DICT = objects.SakiDict
-    LIST = objects.SakiList
 
     def encode_dict(self, o: dict[typing.Any, typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
         types = typing.get_args(_type)
@@ -97,6 +99,8 @@ class SakiTypeEncoder():
         if isinstance(o, LazyObject):
             return LazyObject(field.split(".")[-1])
 
+        given_type = _type
+
         if _type is None:
             _type = type(o)
 
@@ -119,6 +123,9 @@ class SakiTypeEncoder():
             return self.encode_dict(o=o, _type=_type, field=field, collection=collection, _id=_id)
         elif issubclass(_type, typing.Iterable) or isinstance(_type, typing.Iterable):
             return self.encode_iterable(i=o, _type=_type, field=field, collection=collection, _id=_id)
+
+        if given_type is None:
+            return o
 
         return _type(o)
 

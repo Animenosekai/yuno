@@ -1,12 +1,16 @@
 from nasse.timer import Timer
-from saki.collection import SakiCollection
-from saki.document import SakiDocument
 from pymongo import MongoClient
+
+from saki.collection import SakiCollection
 
 client = MongoClient()
 database = client["test"]
 collection = database["account"]
 
+test_collection = SakiCollection(database, "account")
+print(test_collection.find())
+
+"""
 with Timer() as timer:
     class Account(SakiDocument):
         username: str = "default_username"
@@ -62,3 +66,4 @@ with Timer() as timer:
     # print(a.dict_test.__contains__("c"))
 
 print(timer.time)
+"""
