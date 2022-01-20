@@ -1,17 +1,33 @@
+import typing
 import time
 import pymongo.change_stream
 import pymongo.collection
 
 
-class Operation:
-    UPDATE = "update"
-    INSERT = "insert"
-    DELETE = "delete"
-    REPLACE = "replace"
-    DROP = "drop"
-    RENAME = "rename"
-    DROP_DATABASE = "dropDatabase"
-    INVALIDATE = "invalidate"
+OperationType = typing.Literal["insert", "update", "delete", "replace", "drop", "rename", "dropDatabase", "invalidate"]
+
+
+class Operation():
+    UPDATE: OperationType = "update"
+    INSERT: OperationType = "insert"
+    DELETE: OperationType = "delete"
+    REPLACE: OperationType = "replace"
+    DROP: OperationType = "drop"
+    RENAME: OperationType = "rename"
+    DROP_DATABASE: OperationType = "dropDatabase"
+    INVALIDATE: OperationType = "invalidate"
+
+
+def create_match_filter(_id: str, field: str, operation: OperationType) -> dict:
+    match = {
+        "operationType": operation,
+        "$or": [
+            {"fullDocument._id": _id},
+            {"documentKey._id": _id}
+        ]
+    }
+    if operation == Operation.UPDATE:
+        pass
 
 
 class WatchEvent():
@@ -30,7 +46,7 @@ class WatchEvent():
 
     def __init__(self, data: dict) -> None:
         self.id = self._id = data.get("_id")
-        self.operation = data.get("operationType")
+        self.operation: OperationType = data.get("operationType")
         self.document = data.get("fullDocument", None)
         self.namespace = self.Namespace(data.get("ns", {}))
         self.timestamp = data.get("clusterTime", None)
@@ -65,8 +81,8 @@ class UpdateEvent(CRUDEvent):
                 self.new_size = data.get("newSize", None)
 
         def __init__(self, data: dict) -> None:
-            self.updated_fields = data.get("updatedFields", {})
-            self.removed_fields = data.get("removedFields", [])
+            self.updated_fields: dict[str, typing.Any] = data.get("updatedFields", {})
+            self.removed_fields: list[str] = data.get("removedFields", [])
             self.truncated_arrays = [self.Truncated(e) for e in data.get("truncatedArrays", [])]
 
     def __init__(self, data: dict) -> None:
@@ -105,6 +121,9 @@ class InvalidateEvent(WatchEvent):
 
 
 class Watch():
+    """
+    A db.watch(), db.collection.watch(), db.collection.object.watch() stream to get the different events.
+    """
     __next__ = next
     __stream__: pymongo.change_stream.ChangeStream
     __watching_object__: pymongo.collection.Collection
@@ -117,7 +136,10 @@ class Watch():
     # pipeline=pipeline, full_document=None, resume_after=resume_state["token"], max_await_time_ms=None,
     #    batch_size=None, collation=None, start_at_operation_time=None, session=None, start_after=None
 
-    def __init__(self, object: pymongo.collection.Collection, pipeline: list[dict] = None, full_document=None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> None:
+    def __init__(self, watching_object: pymongo.collection.Collection, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> None:
+        """
+        Initializes the stream.
+        """
         self.pipeline = pipeline
         self.full_document = full_document
         self.kwargs = kwargs
@@ -125,10 +147,16 @@ class Watch():
         self.error_limit = int(error_limit)
         self.error_expiration = float(error_expiration)
 
-        self.__watching_object__ = object
-        self.__stream__ = object.watch(pipeline, full_document, **kwargs)
+        self.__watching_object__ = watching_object
+        self.__stream__ = watching_object.watch(pipeline, full_document, **kwargs)
+        self.__closed__ = False
 
     def next(self) -> WatchEvent:
+        """
+        Get the next event (blocking operation)
+        """
+        if self.__closed__:
+            raise StopIteration("Stream is closed")
         try:
             data = self.__stream__.next()
             self.__state__["token"] = self.resume_token
@@ -170,16 +198,34 @@ class Watch():
         return WatchEvent(data)
 
     def try_next(self):
+        """
+        Try to get the next event without raising an exception and without waiting.
+        """
         try:
             return self.__stream__.try_next()
         except StopIteration:
             return None
 
     def close(self):
+        """
+        Closes the stream.
+        """
+        self.__closed__ = True
         self.__stream__.close()
+
+    def resume(self):
+        """
+        Resume the stream from the last known state.
+        """
+        self.kwargs["resume_after"] = self.__state__["token"]
+        self.__stream__ = self.__watching_object__.watch(self.pipeline, self.full_document, **self.kwargs)
+        self.__closed__ = False
 
     @property
     def resume_token(self):
+        """
+        Get the resume token, which is used to resume the stream if failed.
+        """
         return self.__stream__.resume_token
 
     @property
@@ -194,10 +240,32 @@ class Watch():
         return self._cursor.alive
 
     def __enter__(self):
+        """
+        Enter the context manager.
+
+        Example
+        -------
+        >>> with db.watch() as stream: # <-- this line calls __enter__
+        ...     for event in stream:
+        ...         print(event)
+        """
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exit the context manager.
+
+        Example
+        -------
+        >>> with db.watch() as stream:
+        ...     for event in stream:
+        ...         print(event)
+        ... # <-- this line calls __exit__
+        """
         self.close()
 
-    def __iter__(self):
+    def __iter__(self) -> typing.Iterator[WatchEvent]:
+        """
+        Returns the iterator.
+        """
         return self

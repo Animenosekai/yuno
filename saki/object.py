@@ -1,8 +1,11 @@
 import typing
+import inspect
+import threading
 
 import bson
 
 from saki import collection, encoder
+from saki.watch import DropDatabaseEvent, DropEvent, OperationType, RenameEvent, UpdateEvent, Watch
 
 Any = typing.TypeVar("Any")
 
@@ -13,8 +16,8 @@ class SakiObject(object):
     """
     An object behaving like a Python object which is linked to the database to update stuff on the fly.
     """
-    __overwritten__: set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__master__", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
-                                 "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "delete", "reload"}
+    __overwritten__: set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
+                                 "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "delete", "reload", "watch", "on"}
 
     __lazy__: list[str] = []
     """
@@ -29,7 +32,8 @@ class SakiObject(object):
 
     __id__: typing.Union[bson.ObjectId, str, int, typing.Any]
     __field__: str = ""
-    __master__: bool = False
+    __realtime__: bool = False
+    __callbacks__: dict[OperationType, list[typing.Callable]] = {}
     if typing.TYPE_CHECKING:
         __collection__: collection.SakiCollection
 
@@ -63,6 +67,7 @@ class SakiObject(object):
         super().__setattr__("__annotations__", self.__annotations__ if hasattr(self, "__annotations__") else {})
 
         super().__setattr__("__storage_attributes__", set(dir(self.__storage__)).difference(self.__overwritten__))
+        threading.Thread(target=self._watch_loop, daemon=True).start()
 
     def __getitem__(self, name: typing.Union[str, int, slice]) -> None:
         """Gets the attribute 'name' from the database. Example: value = document['name']"""
@@ -82,27 +87,27 @@ class SakiObject(object):
             return super().__getattribute__("__storage__").__getattribute__(name)
         return self.__getitem__(name)
 
-    # def __getattr__(self, name: str) -> None:
-    #     """Gets the attribute 'name' from the database. Example: value = document.name"""
-    #     if name in self.__storage_attributes__:
-    #         return super().__getattribute__("__storage__").__getattribute__(name)
-    #     return self.__getitem__(name)
-
-    def __setitem__(self, name: str, value: typing.Any) -> None:
+    def __setitem__(self, name: str, value: typing.Any, update: bool = True) -> None:
         """Sets the attribute 'name' to 'value' in the database. Example: document['name'] = value"""
         value = encoder.TypeEncoder.default(value, _type=self.__annotations__.get(name, None), field="{}.{}".format(
             self.__field__, name), collection=self.__collection__, _id=self.__id__)
-        self.__collection__.__collection__.update_one(
-            {"_id": self.__id__}, {"$set": {"{}.{}".format(self.__field__, name): encoder.BSONEncoder.default(value)}})
+        if update:
+            self.__collection__.__collection__.update_one(
+                {"_id": self.__id__}, {"$set": {"{}.{}".format(self.__field__, name): encoder.BSONEncoder.default(value)}})
         self.__storage__.__setitem__(name, value)
 
     def __setattr__(self, name: str, value: typing.Any) -> None:
         """Sets the attribute 'name' to 'value' in the database. Example: document.name = value"""
+        if name == "__realtime__":
+            if not self.__realtime__ and value:
+                threading.Thread(target=self._watch_loop, daemon=True).start()
+            super().__setattr__(name, value)
         self.__setitem__(name, value)
 
-    def __delitem__(self, name: str) -> None:
+    def __delitem__(self, name: str, update: bool = True) -> None:
         """Deletes the attribute 'name' from the database. Example: del document['name']"""
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$unset": {"{}.{}".format(self.__field__, name): True}})
+        if update:
+            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$unset": {"{}.{}".format(self.__field__, name): True}})
         self.__storage__.__delitem__(name)
 
     def __delattr__(self, name: str) -> None:
@@ -110,6 +115,7 @@ class SakiObject(object):
         self.__delitem__(name)
 
     def __repr__(self) -> str:
+        """Returns a string representation of the object."""
         return "{}({})".format(self.__class__.__name__, self.__storage__)
 
     def __contains__(self, obj: typing.Any) -> bool:
@@ -128,7 +134,10 @@ class SakiObject(object):
         #    Updated Document
         #      {'username': 'something'}
         """
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$unset": {self.__field__: True}})
+        if self.__field__ == "":
+            self.__collection__.__collection__.delete_one({"_id": self.__id__})
+        else:
+            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$unset": {self.__field__: True}})
 
     def reload(self) -> None:
         """
@@ -141,3 +150,93 @@ class SakiObject(object):
         >>> document.name.reload()
         """
         self.__init__(self.__id__, self.__collection__, self.__field__)
+
+    def _watch_loop(self):
+        """
+        Internal method that watches the database for changes and updates the object.
+
+        Also calls all of the callbacks that are registered to the object on the specific operations.
+        """
+        if not self.__realtime__:
+            return
+        watch = self.watch(error_limit=10)  # we raise the limit a little bit to be sure we don't miss any changes
+        for event in watch:
+            if not self.__realtime__:
+                break
+            if isinstance(event, UpdateEvent):
+                for key, value in event.update_description.updated_fields.items():
+                    if not key.startswith(self.__field__):
+                        continue
+                    key = key.split(".")[-1]
+                    try:
+                        needed = value != self.__getitem__(key)
+                    except KeyError:
+                        needed = True
+                    if needed:
+                        self.__setitem__(key, value, update=False)  # already updated in the database
+
+                for key in event.update_description.removed_fields:
+                    if not key.startswith(self.__field__):
+                        continue
+                    try:
+                        self.__delitem__(key, update=False)  # already updated in the database
+                    except KeyError:
+                        continue
+
+                # TODO: truncated arrays
+
+            if isinstance(event, RenameEvent):
+                self.__collection__.__name__ = event.to.collection
+
+            if isinstance(event, (DropEvent, DropDatabaseEvent)):
+                raise ValueError("The document got deleted from the database")
+
+            for callback, blocking in self.__callbacks__.get(event.operation, []):
+                specs = inspect.getfullargspec(callback).args
+                kwargs = {}
+                if "event" in specs:
+                    kwargs["event"] = event
+                if "collection" in specs:
+                    kwargs["collection"] = self.__collection__
+                if "object" in specs:
+                    kwargs["object"] = self
+                if blocking:
+                    callback(**kwargs)
+                else:
+                    threading.Thread(target=callback, kwargs=kwargs, daemon=True).start()
+
+        watch.close()
+
+    def watch(self, operations: list[OperationType] = None, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
+        """
+        Returns an iterator (Watch) to watch the database for changes.
+        """
+        final_pipeline = []
+        final_pipeline.append({"$match": {"_id": self.__id__}})
+        if operations:
+            final_pipeline.append({"$match": {"operationType": {"$in": operations}}})
+            # we could match the beginning of the fields if the operation is an update
+        final_pipeline.extend(pipeline if pipeline else [])
+        return Watch(self.__collection__, pipeline=final_pipeline, full_document=full_document, error_limit=error_limit, error_expiration=error_expiration, **kwargs)
+
+    def on(self, operation: OperationType, callback: typing.Callable, blocking: bool = False) -> None:
+        """
+        Registers a callback to be called when a certain operation is performed on the current object.
+
+        This implies that __realtime__ is set to True.
+
+        The callback will be called upon the update of the object.
+
+        Parameters
+        ----------
+        operation: OperationType
+            The operation to watch for.
+        callback: typing.Callable
+            The callback to be called.
+        """
+        try:
+            self.__callbacks__[operation].append((callback, blocking))
+        except Exception:
+            self.__callbacks__[operation] = [(callback, blocking)]
+
+        self.__realtime__ = True

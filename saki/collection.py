@@ -1,10 +1,11 @@
+import inspect
+import threading
 import typing
-import time
 import pymongo.database
 import pymongo.collection
 
 from saki import encoder, objects
-from saki.watch import Watch
+from saki.watch import OperationType, Watch
 
 IndexDirection = typing.TypeVar("IndexDirection")
 
@@ -12,12 +13,15 @@ IndexDirection = typing.TypeVar("IndexDirection")
 class SakiCollection(object):
     __type__ = objects.SakiDict
     __overwritten__ = {"__type__", "__overwritten__", "__name__", "__annotations__", "__database__", "__collection__", "__class__",  # we need to overwrite this to avoid getting the super class
-                       "__init__", "find", "index", "watch", "__delitem__", "__delattr__", "__setitem__", "__setattr__", "__getitem__", "__getattr__", "__repr__"}
+                       "__init__", "find", "index", "watch", "on", "_watch_loop", "__realtime__", "callbacks", "__delitem__", "__delattr__", "__setitem__", "__setattr__", "__getitem__", "__getattr__", "__repr__"}
 
     __name__: str
     __annotations__: dict[str, type]
     __database__: pymongo.database.Database
     __collection__: pymongo.collection.Collection
+
+    __realtime__: bool = False
+    __callbacks__: dict[OperationType, list[typing.Callable]] = {}
 
     def __init__(self, database: pymongo.database.Database, name: str = "__saki_test__") -> None:
         super().__setattr__("__name__", str(name))
@@ -81,37 +85,63 @@ class SakiCollection(object):
 
     # TODO: Implement update() and aggregate()
 
-    def watch(self, pipeline: list[dict] = None, full_document: str = "updateLookup", error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
+    def _watch_loop(self):
         """
-        Watch for changes on this collection
+        Internal method that watches the database for changes and updates the object.
+
+        Also calls all of the callbacks that are registered to the object on the specific operations.
+        """
+        if not self.__realtime__:
+            return
+        watch = self.watch(error_limit=10)  # we raise the limit a little bit to be sure we don't miss any changes
+        for event in watch:
+            if not self.__realtime__:
+                break
+            for callback, blocking in self.__callbacks__.get(event.operation, []):
+                specs = inspect.getfullargspec(callback).args
+                kwargs = {}
+                if "event" in specs:
+                    kwargs["event"] = event
+                if "collection" in specs:
+                    kwargs["collection"] = self
+                if blocking:
+                    callback(**kwargs)
+                else:
+                    threading.Thread(target=callback, kwargs=kwargs, daemon=True).start()
+
+        watch.close()
+
+    def watch(self, operations: list[OperationType] = None, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
+        """
+        Returns an iterator (Watch) to watch the database for changes.
+        """
+        final_pipeline = []
+        if operations:
+            final_pipeline.append({"$match": {"operationType": {"$in": operations}}})
+        final_pipeline.extend(pipeline if pipeline else [])
+        return Watch(self.__collection__, pipeline=final_pipeline, full_document=full_document, error_limit=error_limit, error_expiration=error_expiration, **kwargs)
+
+    def on(self, operation: OperationType, callback: typing.Callable, blocking: bool = False) -> None:
+        """
+        Registers a callback to be called when a certain operation is performed on the current object.
+
+        This implies that __realtime__ is set to True.
+
+        The callback will be called upon the update of the object.
 
         Parameters
         ----------
-        pipeline:
-            A list of aggregation pipelines to apply to the collection.
-        full_document:
-            The fullDocument to pass to the pipeline.
-        max_await_time_ms:
-            The maximum time in milliseconds to allow the server to wait for changes
-        max_time_ms:
-            The maximum amount of time in milliseconds to allow the operation to run
-        batch_size:
-            The maximum number of documents to return per batch
-        collation:
-            The collation to use
-        resume_after:
-            The operation to restart after
-        start_at_operation_time:
-            The operation time to start the change stream at
-        session:
-            The session to use for this operation
-
-        Returns
-        -------
-        Watch
-            An iterator 
+        operation: OperationType
+            The operation to watch for.
+        callback: typing.Callable
+            The callback to be called.
         """
-        return Watch(self.__collection__, pipeline, full_document, error_limit=error_limit, error_expiration=error_expiration, **kwargs)
+        try:
+            self.__callbacks__[operation].append((callback, blocking))
+        except Exception:
+            self.__callbacks__[operation] = [(callback, blocking)]
+
+        self.__realtime__ = True
 
     def __delitem__(self, name: str) -> None:
         self.__collection__.delete_one({"_id": name})
@@ -123,6 +153,8 @@ class SakiCollection(object):
         self.__collection__.replace_one({"_id": name}, encoder.BSONEncoder.default(value), upsert=True)
 
     def __setattr__(self, name: str, value: dict) -> None:
+        if name == "__name__":
+            return self.__init__(database=self.__database__, name=value)  # reinitializing the collection because it's a different one
         self.__setitem__(name, value)
 
     def __getitem__(self, name: str) -> objects.SakiDict:
