@@ -126,3 +126,6 @@ dmypy.json
 
 # macOS
 .DS_Store
+
+# MongoDB Secret
+mongo_secret.py

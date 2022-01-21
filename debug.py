@@ -1,13 +1,12 @@
 from nasse.timer import Timer
 from pymongo import MongoClient
+from mongo_secret import URI
 
 from saki.collection import SakiCollection
 
-client = MongoClient()
-database = client["test"]
-collection = database["account"]
-
-test_collection = SakiCollection(database, "account")
+client = MongoClient(URI)
+database = client["test_database"]
+test_collection = SakiCollection(database)
 print(test_collection.find())
 
 """

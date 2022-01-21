@@ -51,7 +51,7 @@ class WatchEvent():
         self.namespace = self.Namespace(data.get("ns", {}))
         self.timestamp = data.get("clusterTime", None)
         self.transaction = data.get("txnNumber", None)
-        self.session_id = self.LSID(data.get("lsid", None))
+        self.session_id = self.LSID(data.get("lsid", {}))
 
 
 class CRUDEvent(WatchEvent):
@@ -124,7 +124,6 @@ class Watch():
     """
     A db.watch(), db.collection.watch(), db.collection.object.watch() stream to get the different events.
     """
-    __next__ = next
     __stream__: pymongo.change_stream.ChangeStream
     __watching_object__: pymongo.collection.Collection
     __state__: dict = {
@@ -150,6 +149,9 @@ class Watch():
         self.__watching_object__ = watching_object
         self.__stream__ = watching_object.watch(pipeline, full_document, **kwargs)
         self.__closed__ = False
+
+    def __next__(self): # alias
+        return self.next()
 
     def next(self) -> WatchEvent:
         """

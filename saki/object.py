@@ -100,8 +100,10 @@ class SakiObject(object):
         """Sets the attribute 'name' to 'value' in the database. Example: document.name = value"""
         if name == "__realtime__":
             if not self.__realtime__ and value:
+                super().__setattr__(name, value)
                 threading.Thread(target=self._watch_loop, daemon=True).start()
-            super().__setattr__(name, value)
+                return
+            return super().__setattr__(name, value)
         self.__setitem__(name, value)
 
     def __delitem__(self, name: str, update: bool = True) -> None:
@@ -165,7 +167,7 @@ class SakiObject(object):
                 break
             if isinstance(event, UpdateEvent):
                 for key, value in event.update_description.updated_fields.items():
-                    if not key.startswith(self.__field__):
+                    if not key.startswith(self.__field__) or key.removeprefix(self.__field__).count(".") > 1:
                         continue
                     key = key.split(".")[-1]
                     try:
@@ -212,12 +214,16 @@ class SakiObject(object):
         Returns an iterator (Watch) to watch the database for changes.
         """
         final_pipeline = []
-        final_pipeline.append({"$match": {"_id": self.__id__}})
+        # matches the current document and the drop/rename/dropDatabase events
+        # final_pipeline.append({"$match": {"$or": [
+        #     {"_id": self.__id__},
+        #     {"operationType": {"$in": ["drop", "rename", "dropDatabase", "invalidate"]}}
+        # ]}})
         if operations:
             final_pipeline.append({"$match": {"operationType": {"$in": operations}}})
             # we could match the beginning of the fields if the operation is an update
         final_pipeline.extend(pipeline if pipeline else [])
-        return Watch(self.__collection__, pipeline=final_pipeline, full_document=full_document, error_limit=error_limit, error_expiration=error_expiration, **kwargs)
+        return Watch(self.__collection__.__collection__, pipeline=final_pipeline, full_document=full_document, error_limit=error_limit, error_expiration=error_expiration, **kwargs)
 
     def on(self, operation: OperationType, callback: typing.Callable, blocking: bool = False) -> None:
         """
