@@ -1,4 +1,8 @@
 import pymongo
+import typing
+
+IndexDirectionType = typing.Literal[1, -1, "2d", "geoHaystack", "2dsphere", "hashed", "text"]
+
 
 class IndexDirection:
     ASCENDING = pymongo.ASCENDING

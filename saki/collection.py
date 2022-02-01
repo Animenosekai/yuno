@@ -5,9 +5,8 @@ import pymongo.database
 import pymongo.collection
 
 from saki import encoder, objects
+from saki.direction import IndexDirectionType
 from saki.watch import OperationType, Watch
-
-IndexDirection = typing.TypeVar("IndexDirection")
 
 
 class SakiCollection(object):
@@ -28,8 +27,9 @@ class SakiCollection(object):
         super().__setattr__("__annotations__", self.__annotations__ if hasattr(self, "__annotations__") else {})
         super().__setattr__("__database__", database)
         super().__setattr__("__collection__", database[name])
+        threading.Thread(target=self._watch_loop, daemon=True).start()
 
-    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, **kwargs) -> list[objects.SakiDict]:
+    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, defered: bool = False, **kwargs) -> typing.Iterable[objects.SakiDict]:
         """
         Find documents in the collection
 
@@ -43,6 +43,9 @@ class SakiCollection(object):
             A list of attributes to exclude from the result.
         limit:
             The maximum number of documents to return.
+        defered:
+            If True, a generator will be returned and results will be yielded when necessary.
+            If False, the results will be returned immediately and everything will be in memory.
         **kwargs:
             Keyword arguments to pass to the find method
             You can therefore use the function like so:
@@ -63,15 +66,35 @@ class SakiCollection(object):
             projection["_id"] = True  # Always include _id
         else:  # If there are no fields to include or exclude, we don't need any projection
             projection = None
-        results: list[objects.SakiDict] = []
+        if not defered:
+            results: list[objects.SakiDict] = []
+            for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit):
+                name = doc.get("_id")
+                results.append(encoder.TypeEncoder.default(doc, _type=self.__annotations__.get(
+                    name, self.__type__), field="", collection=self, _id=name))
+            return results
         for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit):
             name = doc.get("_id")
-            results.append(encoder.TypeEncoder.default(doc, _type=self.__annotations__.get(name, self.__type__), field="", collection=self, _id=name))
-        return results
+            yield encoder.TypeEncoder.default(doc, _type=self.__annotations__.get(name, self.__type__), field="", collection=self, _id=name)
 
-    def index(self, keys: typing.Union[str, list[tuple[str, IndexDirection]]], name: str = None, unique: bool = True, background: bool = True, sparse: bool = True, **kwargs) -> None:
+    def index(self, keys: typing.Union[str, list[tuple[str, IndexDirectionType]]], name: str = None, unique: bool = True, background: bool = True, sparse: bool = True, **kwargs) -> None:
         """
         Creates an index for this collection
+
+        Parameters
+        ----------
+        keys: str or list[tuple[str, IndexDirectionType]]
+            The keys to index.
+        name: str
+            The name of the index.
+        unique: bool
+            Whether the index should be unique.
+        background: bool
+            Whether the index should be created in the background.
+        sparse: bool
+            Whether documents without the field should be ignored or not.
+        **kwargs:
+            Keyword arguments to pass to pymongo's create_index method.
         """
         default = {
             "background": background,
@@ -85,9 +108,15 @@ class SakiCollection(object):
 
     # TODO: Implement update() and aggregate()
 
+    def update(self, *args, **kwargs):
+        return self.__collection__.update_one(*args, **kwargs)
+
+    def aggregate(self, pipeline, *args, **kwargs):
+        return self.__collection__.aggregate(pipeline, *args, **kwargs)
+
     def _watch_loop(self):
         """
-        Internal method that watches the database for changes and updates the object.
+        Internal method that watches the database for changes.
 
         Also calls all of the callbacks that are registered to the object on the specific operations.
         """
@@ -155,6 +184,12 @@ class SakiCollection(object):
     def __setattr__(self, name: str, value: dict) -> None:
         if name == "__name__":
             return self.__init__(database=self.__database__, name=value)  # reinitializing the collection because it's a different one
+        if name == "__realtime__":
+            if not self.__realtime__ and value:
+                super().__setattr__(name, value)
+                threading.Thread(target=self._watch_loop, daemon=True).start()
+                return
+            return super().__setattr__(name, value)
         self.__setitem__(name, value)
 
     def __getitem__(self, name: str) -> objects.SakiDict:
