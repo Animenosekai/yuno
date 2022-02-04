@@ -73,13 +73,19 @@ class SakiObject(object):
 
     def __getitem__(self, name: typing.Union[str, int, slice]) -> None:
         """Gets the attribute 'name' from the database. Example: value = document['name']"""
-        data = self.__storage__[name]
-        if isinstance(data, encoder.LazyObject):
-            data = self.__lazy_fetch__(data)
-            data = encoder.TypeEncoder.default(data, _type=self.__annotations__.get(name, None), field="{}.{}".format(
-                self.__field__, name), collection=self.__collection__, _id=self.__id__)
-            self.__storage__.__setitem__(name, data)
-        return data
+        try:
+            data = self.__storage__[name]
+            if isinstance(data, encoder.LazyObject):
+                data = self.__lazy_fetch__(data)
+                data = encoder.SakiTypeEncoder().default(data, _type=self.__annotations__.get(name, None), field="{}.{}".format(
+                    self.__field__, name), collection=self.__collection__, _id=self.__id__)
+                self.__storage__.__setitem__(name, data)
+            return data
+        except KeyError:
+            try:
+                return super().__getattribute__(name)
+            except Exception:
+                raise KeyError(name)
 
     def __getattribute__(self, name: str) -> Any:
         """Gets the attribute 'name' from the object if available (methods, etc.) or from the database. Example: value = document.name"""
@@ -87,7 +93,10 @@ class SakiObject(object):
             return super().__getattribute__(name)
         if name in super().__getattribute__("__storage_attributes__"):
             return super().__getattribute__("__storage__").__getattribute__(name)
-        return self.__getitem__(name)
+        try:
+            return self.__getitem__(name)
+        except KeyError as err:
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'") from err
 
     def __setitem__(self, name: str, value: typing.Any, update: bool = True) -> None:
         """Sets the attribute 'name' to 'value' in the database. Example: document['name'] = value"""

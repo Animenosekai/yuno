@@ -8,6 +8,8 @@ import typing
 import bson
 from nasse import logging, utils
 
+# from saki.objects.dict import SakiDict
+
 
 class LazyObject():
     def __init__(self, field: str) -> None:
@@ -75,11 +77,12 @@ class SakiTypeEncoder():
     def encode_dict(self, o: dict[typing.Any, typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
         types = typing.get_args(_type)
         length = len(types)
+        CAST = self.dict if not issubclass(_type, self.dict) else _type
         if length <= 0:
-            return self.dict(_id=_id, collection=collection, field=field, data={key: self.default(o=val, _type=None, field="{}.{}".format(field, key), collection=collection, _id=_id) for key, val in dict(o).items()})
+            return CAST(_id=_id, collection=collection, field=field, data={key: self.default(o=val, _type=None, field="{}.{}".format(field, key), collection=collection, _id=_id) for key, val in dict(o).items()})
         elif length <= 2:
             key__type, value__type = (str, types[0]) if length == 1 else (types[0], types[1])
-            return self.dict(_id=_id, collection=collection, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k), collection=collection, _id=_id) for k, v in dict(o).items()})
+            return CAST(_id=_id, collection=collection, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k), collection=collection, _id=_id) for k, v in dict(o).items()})
             # return self.DICT(field=field, saki_document=document, values={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k)) for k, v in o.items()})
         length -= 1
         for index, (key, value) in enumerate(o.items()):
@@ -87,20 +90,21 @@ class SakiTypeEncoder():
                 o[str(key)] = self.default(o=value, _type=types[index], field="{}.{}".format(field, key), collection=collection, _id=_id)
             else:
                 o[str(key)] = self.default(o=value, _type=types[length], field="{}.{}".format(field, key), collection=collection, _id=_id)
-        return self.dict(_id=_id, collection=collection, field=field, data=o)
+        return CAST(_id=_id, collection=collection, field=field, data=o)
 
     def encode_iterable(self, i: typing.Iterable[typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
         _types = typing.get_args(_type)
         length = len(_types)
+        CAST = self.list if not issubclass(_type, self.list) else _type
         if length <= 0:
-            return self.list(_id=_id, collection=collection, field=field, data=[self.default(val, None, field="{}.{}".format(field, index), collection=collection, _id=_id) for index, val in enumerate(i)])
+            return CAST(_id=_id, collection=collection, field=field, data=[self.default(val, None, field="{}.{}".format(field, index), collection=collection, _id=_id) for index, val in enumerate(i)])
         length -= 1
         for index, value in enumerate(i):
             if length > index:
                 i[index] = self.default(value, _types[index], field="{}.{}".format(field, index), collection=collection, _id=_id)
             else:
                 i[index] = self.default(value, _types[length], field="{}.{}".format(field, index), collection=collection, _id=_id)
-        return self.list(_id=_id, collection=collection, field=field, data=i)
+        return CAST(_id=_id, collection=collection, field=field, data=i)
 
     def default(self, o: typing.Any, _type: T = None, field: str = "", collection=None, _id: str = None) -> T:
         if isinstance(o, LazyObject):
