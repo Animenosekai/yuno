@@ -17,12 +17,14 @@ class LazyObject():
         return "LazyObject({})".format(self.field)
 
 
-from saki import object, objects  # noqa
-
 BSON_ENCODABLE = (bool, int, bson.Int64, float, str, datetime.datetime, bson.Regex, re.Pattern, bson.Binary, bson.ObjectId, bson.DBRef, bson.Code)
 
 
 class SakiBSONEncoder():
+    def __init__(self) -> None:
+        from saki import object  # noqa
+        self.object = object.SakiObject
+
     def encode_dict(self, o: dict[typing.Any, typing.Any]):
         return {str(k): self.default(v) for k, v in o.items()}
 
@@ -40,7 +42,7 @@ class SakiBSONEncoder():
     def default(self, o: typing.Any) -> typing.Any:
         if o is None:
             return None
-        if isinstance(o, object.SakiObject):
+        if isinstance(o, self.object):
             o = o.__storage__
         # https://pymongo.readthedocs.io/en/stable/api/bson/index.html
         elif isinstance(o, BSON_ENCODABLE):
@@ -63,16 +65,21 @@ IMMUTABLES = (bool, int, bson.Int64, float, str, bson.Binary, bson.ObjectId, bso
 
 
 class SakiTypeEncoder():
-    BSON_SAFE_ENCODER = SakiBSONEncoder()
+
+    def __init__(self) -> None:
+        from saki import objects
+        self.dict = objects.SakiDict
+        self.list = objects.SakiList
+        self.bson_encoder = SakiBSONEncoder()
 
     def encode_dict(self, o: dict[typing.Any, typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
         types = typing.get_args(_type)
         length = len(types)
         if length <= 0:
-            return objects.SakiDict(_id=_id, collection=collection, field=field, data={key: self.default(o=val, _type=None, field="{}.{}".format(field, key), collection=collection, _id=_id) for key, val in dict(o).items()})
+            return self.dict(_id=_id, collection=collection, field=field, data={key: self.default(o=val, _type=None, field="{}.{}".format(field, key), collection=collection, _id=_id) for key, val in dict(o).items()})
         elif length <= 2:
             key__type, value__type = (str, types[0]) if length == 1 else (types[0], types[1])
-            return objects.SakiDict(_id=_id, collection=collection, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k), collection=collection, _id=_id) for k, v in dict(o).items()})
+            return self.dict(_id=_id, collection=collection, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k), collection=collection, _id=_id) for k, v in dict(o).items()})
             # return self.DICT(field=field, saki_document=document, values={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k)) for k, v in o.items()})
         length -= 1
         for index, (key, value) in enumerate(o.items()):
@@ -80,20 +87,20 @@ class SakiTypeEncoder():
                 o[str(key)] = self.default(o=value, _type=types[index], field="{}.{}".format(field, key), collection=collection, _id=_id)
             else:
                 o[str(key)] = self.default(o=value, _type=types[length], field="{}.{}".format(field, key), collection=collection, _id=_id)
-        return objects.SakiDict(_id=_id, collection=collection, field=field, data=o)
+        return self.dict(_id=_id, collection=collection, field=field, data=o)
 
     def encode_iterable(self, i: typing.Iterable[typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
         _types = typing.get_args(_type)
         length = len(_types)
         if length <= 0:
-            return objects.SakiList(_id=_id, collection=collection, field=field, data=[self.default(val, None, field="{}.{}".format(field, index), collection=collection, _id=_id) for index, val in enumerate(i)])
+            return self.list(_id=_id, collection=collection, field=field, data=[self.default(val, None, field="{}.{}".format(field, index), collection=collection, _id=_id) for index, val in enumerate(i)])
         length -= 1
         for index, value in enumerate(i):
             if length > index:
                 i[index] = self.default(value, _types[index], field="{}.{}".format(field, index), collection=collection, _id=_id)
             else:
                 i[index] = self.default(value, _types[length], field="{}.{}".format(field, index), collection=collection, _id=_id)
-        return objects.SakiList(_id=_id, collection=collection, field=field, data=i)
+        return self.list(_id=_id, collection=collection, field=field, data=i)
 
     def default(self, o: typing.Any, _type: T = None, field: str = "", collection=None, _id: str = None) -> T:
         if isinstance(o, LazyObject):
@@ -130,5 +137,5 @@ class SakiTypeEncoder():
         return _type(o)
 
 
-BSONEncoder = SakiBSONEncoder()
-TypeEncoder = SakiTypeEncoder()
+# BSONEncoder = SakiBSONEncoder()
+# TypeEncoder = SakiTypeEncoder()

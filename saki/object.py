@@ -4,7 +4,10 @@ import threading
 
 import bson
 
-from saki import collection, encoder
+if typing.TYPE_CHECKING:
+    from saki import collection
+
+from saki import encoder
 from saki.watch import DropDatabaseEvent, DropEvent, OperationType, RenameEvent, UpdateEvent, Watch
 
 Any = typing.TypeVar("Any")
@@ -34,8 +37,7 @@ class SakiObject(object):
     __field__: str = ""
     __realtime__: bool = False
     __callbacks__: dict[OperationType, list[typing.Callable]] = {}
-    if typing.TYPE_CHECKING:
-        __collection__: collection.SakiCollection
+    __collection__: "collection.SakiCollection"
 
     def __fetch_from_db__(self) -> typing.Union[list, dict]:
         raise NotImplementedError("This method should be implemented by the child class.")

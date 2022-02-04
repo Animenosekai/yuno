@@ -19,7 +19,8 @@ class ProfilingLevel:
 
 
 class SakiDatabase(object):
-    __overwritten__ = {"__init__"}
+    __overwritten__ = {"__init__", "aggregate", "command", "create_collection", "drop_collection", "get_collection", "list_collection_names", "list_collections", "profiling_info",
+                       "profiling_level", "set_profiling_level", "validate_collection", "watch", "on", "_watch_loop", "__setattr__", "__getitem__", "__getattribute__", "__repr__", "__name__", "__client__", "__database__", "__realtime__", "__callbacks__", "__annotations__"}
 
     __name__: str
     __client__: pymongo.MongoClient
@@ -47,14 +48,14 @@ class SakiDatabase(object):
         """
         return self.__database__.command(command, *args, **kwargs)
 
-    def create_collection(self, name: str, **kwargs) -> saki_collection.SakiCollection:
+    def create_collection(self, name: str, **kwargs) -> "saki_collection.SakiCollection":
         """
         Create a new collection
         """
         self.__database__.create_collection(name, **kwargs)
         return saki_collection.SakiCollection(self, name)
 
-    def drop_collection(self, collection: typing.Union[str, saki_collection.SakiCollection, pymongo.collection.Collection]) -> None:
+    def drop_collection(self, collection: typing.Union[str, "saki_collection.SakiCollection", pymongo.collection.Collection]) -> None:
         """
         Drops a collection
         """
@@ -62,11 +63,12 @@ class SakiDatabase(object):
             collection = collection.__collection__
         self.__database__.drop_collection(collection)
 
-    def get_collection(self, name: str) -> saki_collection.SakiCollection:
+    def get_collection(self, name: str) -> "saki_collection.SakiCollection":
         """
         Get a collection by name
         """
-        return saki_collection.SakiCollection(self, name)
+        cast = self.__annotations__.get(name, saki_collection.SakiCollection)
+        return cast(self, name)
 
     def list_collection_names(self, filter: dict[str, str] = None, **kwargs) -> list[str]:
         """
@@ -75,7 +77,7 @@ class SakiDatabase(object):
         kwargs["filter"] = filter
         return self.__database__.list_collection_names(**kwargs)
 
-    def list_collections(self, filter: dict[str, str] = None, **kwargs) -> list[saki_collection.SakiCollection]:
+    def list_collections(self, filter: dict[str, str] = None, **kwargs) -> list["saki_collection.SakiCollection"]:
         """
         List all of the collections in this database
         """
@@ -99,7 +101,7 @@ class SakiDatabase(object):
         """
         self.__database__.set_profiling_level(level, **kwargs)
 
-    def validate_collection(self, collection: typing.Union[str, saki_collection.SakiCollection, pymongo.collection.Collection], structure: bool = False, full: bool = False, background: bool = False, *args, **kwargs) -> dict:
+    def validate_collection(self, collection: typing.Union[str, "saki_collection.SakiCollection", pymongo.collection.Collection], structure: bool = False, full: bool = False, background: bool = False, *args, **kwargs) -> dict:
         """
         Validate a collection
         """
@@ -168,18 +170,15 @@ class SakiDatabase(object):
     def __setattr__(self, name: str, value: dict) -> None:
         if name == "__name__":
             return self.__init__(client=self.__client__, name=value)  # reinitializing the collection because it's a different one
-        if name == "__realtime__":
-            if not self.__realtime__ and value:
-                super().__setattr__(name, value)
-                threading.Thread(target=self._watch_loop, daemon=True).start()
-                return
-            return super().__setattr__(name, value)
-        self.__setitem__(name, value)
+        if name == "__realtime__" and not self.__realtime__ and value:
+            super().__setattr__(name, value)
+            return threading.Thread(target=self._watch_loop, daemon=True).start()
+        super().__setattr__(name, value)
 
-    def __getitem__(self, name: str) -> saki_collection.SakiCollection:
+    def __getitem__(self, name: str) -> "saki_collection.SakiCollection":
         return self.get_collection(name)
 
-    def __getattribute__(self, name: str) -> typing.Union[saki_collection.SakiCollection, typing.Any]:
+    def __getattribute__(self, name: str) -> typing.Union["saki_collection.SakiCollection", typing.Any]:
         if name in super().__getattribute__("__overwritten__"):
             return super().__getattribute__(name)
         return self.__getitem__(name)
