@@ -19,7 +19,7 @@ class SakiObject(object):
     """
     An object behaving like a Python object which is linked to the database to update stuff on the fly.
     """
-    __overwritten__: set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
+    __overwritten__: set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__defaults__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
                                  "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "delete", "reload", "watch", "on"}
 
     __lazy__: list[str] = []
@@ -32,6 +32,7 @@ class SakiObject(object):
     """
     __storage__: typing.Union[dict, list]
     __storage_attributes__: set[str] = set()
+    __defaults__: set[str] = set()
 
     __id__: typing.Union[bson.ObjectId, str, int, typing.Any]
     __field__: str = ""
@@ -71,6 +72,9 @@ class SakiObject(object):
         super().__setattr__("__storage_attributes__", set(dir(self.__storage__)).difference(self.__overwritten__))
         threading.Thread(target=self._watch_loop, daemon=True).start()
 
+        super().__setattr__("__defaults__", set(dir(self)).difference(self.__storage_attributes__.union(
+            self.__overwritten__).union({"__dict__", "__weakref__", "__module__"})))
+
     def __getitem__(self, name: typing.Union[str, int, slice]) -> None:
         """Gets the attribute 'name' from the database. Example: value = document['name']"""
         try:
@@ -81,11 +85,11 @@ class SakiObject(object):
                     self.__field__, name), collection=self.__collection__, _id=self.__id__)
                 self.__storage__.__setitem__(name, data)
             return data
-        except KeyError:
+        except KeyError as err:
             try:
                 return super().__getattribute__(name)
             except Exception:
-                raise KeyError(name)
+                raise err
 
     def __getattribute__(self, name: str) -> Any:
         """Gets the attribute 'name' from the object if available (methods, etc.) or from the database. Example: value = document.name"""
@@ -100,11 +104,11 @@ class SakiObject(object):
 
     def __setitem__(self, name: str, value: typing.Any, update: bool = True) -> None:
         """Sets the attribute 'name' to 'value' in the database. Example: document['name'] = value"""
-        value = encoder.TypeEncoder.default(value, _type=self.__annotations__.get(name, None), field="{}.{}".format(
+        value = encoder.SakiTypeEncoder().default(value, _type=self.__annotations__.get(name, None), field="{}.{}".format(
             self.__field__, name), collection=self.__collection__, _id=self.__id__)
         if update:
             self.__collection__.__collection__.update_one(
-                {"_id": self.__id__}, {"$set": {"{}.{}".format(self.__field__, name): encoder.BSONEncoder.default(value)}})
+                {"_id": self.__id__}, {"$set": {"{}.{}".format(self.__field__, name): encoder.SakiBSONEncoder().default(value)}})
         self.__storage__.__setitem__(name, value)
 
     def __setattr__(self, name: str, value: typing.Any) -> None:

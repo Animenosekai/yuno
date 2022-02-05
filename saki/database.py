@@ -6,7 +6,7 @@ import pymongo
 import pymongo.collection
 import pymongo.database
 
-from saki import collection as saki_collection
+from saki import client, collection as saki_collection
 from saki.watch import OperationType, Watch
 
 ProfilingLevelType = typing.Literal[0, 1, 2]
@@ -20,19 +20,19 @@ class ProfilingLevel:
 
 class SakiDatabase(object):
     __overwritten__ = {"__init__", "aggregate", "command", "create_collection", "drop_collection", "get_collection", "list_collection_names", "list_collections", "profiling_info",
-                       "profiling_level", "set_profiling_level", "validate_collection", "watch", "on", "_watch_loop", "__setattr__", "__getitem__", "__getattribute__", "__repr__", "__name__", "__client__", "__database__", "__realtime__", "__callbacks__", "__annotations__"}
+                       "profiling_level", "set_profiling_level", "validate_collection", "watch", "on", "_watch_loop", "__setattr__", "__getitem__", "__getattribute__", "__delattr__", "__repr__", "__name__", "__client__", "__database__", "__realtime__", "__callbacks__", "__annotations__"}
 
     __name__: str
-    __client__: pymongo.MongoClient
+    __client__: "client.SakiClient"
     __database__: pymongo.database.Database
 
     __realtime__: bool = False
     __callbacks__: dict[OperationType, list[typing.Callable]] = {}
 
-    def __init__(self, client: pymongo.MongoClient, name: str = "__sakit_test__") -> None:
+    def __init__(self, client: "client.SakiClient", name: str = "__sakit_test__") -> None:
         super().__setattr__("__name__", str(name))
         super().__setattr__("__annotations__", self.__annotations__ if hasattr(self, "__annotations__") else {})
-        super().__setattr__("__database__", client[name])
+        super().__setattr__("__database__", client.__client__.get_database(name))
         super().__setattr__("__client__", client)
         threading.Thread(target=self._watch_loop, daemon=True).start()
 
@@ -169,7 +169,7 @@ class SakiDatabase(object):
 
     def __setattr__(self, name: str, value: dict) -> None:
         if name == "__name__":
-            return self.__init__(client=self.__client__, name=value)  # reinitializing the collection because it's a different one
+            return self.__init__(client=self.__client__, name=value)  # reinitializing the database because it's a different one
         if name == "__realtime__" and not self.__realtime__ and value:
             super().__setattr__(name, value)
             return threading.Thread(target=self._watch_loop, daemon=True).start()
@@ -182,6 +182,9 @@ class SakiDatabase(object):
         if name in super().__getattribute__("__overwritten__"):
             return super().__getattribute__(name)
         return self.__getitem__(name)
+
+    def __delattr__(self, name: str) -> None:
+        self.drop_collection(name)
 
     def __repr__(self):
         return "SakiDatabase('{}')".format(self.__name__)

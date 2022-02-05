@@ -12,11 +12,11 @@ class SakiDict(_object.SakiObject, dict):
     """
     __storage__: dict
     __overwritten__ = _object.SakiObject.__overwritten__.union(
-        {"__fetch_from_db__", "__lazy_fetch__", "clear", "pop", "popitem", "setdefault", "update"})
+        {"__fetch_from_db__", "__lazy_fetch__", "get", "clear", "pop", "popitem", "setdefault", "update"})
 
     def __lazy_fetch__(self, lazy_obj: encoder.LazyObject) -> typing.Any:
         data = list(self.__collection__.__collection__.aggregate([
-            {"$match": {"_id": encoder.BSONEncoder.default(self.__id__)}},
+            {"$match": {"_id": encoder.SakiBSONEncoder().default(self.__id__)}},
             {"$replaceRoot": {"newRoot": "${}".format(self.__field__)}},
             {"$project": {"_id": False, lazy_obj.field: True}}
         ]))
@@ -27,7 +27,7 @@ class SakiDict(_object.SakiObject, dict):
 
     def __fetch_from_db__(self) -> typing.Union[list, dict]:
         pipeline = [
-            {'$match': {'_id': encoder.BSONEncoder.default(self.__id__)}},
+            {'$match': {'_id': encoder.SakiBSONEncoder().default(self.__id__)}},
             {'$replaceRoot': {'newRoot': '${}'.format(self.__field__)}}
         ]
         if len(self.__lazy__) > 0:
@@ -36,7 +36,7 @@ class SakiDict(_object.SakiObject, dict):
         if len(data) <= 0:
             return {}
         annotations = self.__annotations__
-        data = {k: encoder.TypeEncoder.default(
+        data = {k: encoder.SakiTypeEncoder().default(
             v,
             _type=annotations.get(k, None),
             field="{}.{}".format(self.__field__, k),
@@ -45,6 +45,32 @@ class SakiDict(_object.SakiObject, dict):
         ) for k, v in data[0].items()}
         data.update({field: encoder.LazyObject(field) for field in self.__lazy__})
         return data
+
+    def get(self, name: str, default: typing.Any = None) -> typing.Any:
+        """
+        Returns the value of the 'name' field.
+
+        Parameters
+        ----------
+        name : str
+            The name of the field to return.
+        default : typing.Any, default=None
+            The value to return if the field is not found.
+
+        Example
+        --------
+        >>> document.name.get('first')
+        'John'
+        >>> document.name.get('first', 'Jane')
+        'John'
+        >>> document.name.get('last')
+        None
+        >>> document.name.get('last', 'Jane')
+        'Jane'
+        #    Initial Document
+        #      {'name': {'first': 'John'}}
+        """
+        return self.__storage__.get(name, default)
 
     def clear(self) -> None:
         """
@@ -82,7 +108,7 @@ class SakiDict(_object.SakiObject, dict):
         value = copied.pop(key, default)
         if isinstance(value, Default):  # no value coming from the user should be a nasse.utils.annotations.Default instance
             raise KeyError(key)
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.BSONEncoder.default(copied)}})
+        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
         return value
 
@@ -104,7 +130,7 @@ class SakiDict(_object.SakiObject, dict):
         """
         copied = self.__storage__.copy()
         key, value = copied.popitem()
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.BSONEncoder.default(copied)}})
+        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
         return key, value
 
@@ -134,7 +160,7 @@ class SakiDict(_object.SakiObject, dict):
         """
         copied = self.__storage__.copy()
         value = copied.setdefault(key, default)
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.BSONEncoder.default(copied)}})
+        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
         return value
 
@@ -161,5 +187,5 @@ class SakiDict(_object.SakiObject, dict):
         """
         copied = self.__storage__.copy()
         copied.update(iterable or [], **kwargs)
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.BSONEncoder.default(copied)}})
+        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)

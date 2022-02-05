@@ -22,6 +22,10 @@ class LazyObject():
 BSON_ENCODABLE = (bool, int, bson.Int64, float, str, datetime.datetime, bson.Regex, re.Pattern, bson.Binary, bson.ObjectId, bson.DBRef, bson.Code)
 
 
+def get_annotations(o: object):
+    return o.__annotations__ if hasattr(o, "__annotations__") else {}
+
+
 class SakiBSONEncoder():
     def __init__(self) -> None:
         from saki import object  # noqa
@@ -79,7 +83,7 @@ class SakiTypeEncoder():
         length = len(types)
         CAST = self.dict if not issubclass(_type, self.dict) else _type
         if length <= 0:
-            return CAST(_id=_id, collection=collection, field=field, data={key: self.default(o=val, _type=None, field="{}.{}".format(field, key), collection=collection, _id=_id) for key, val in dict(o).items()})
+            return CAST(_id=_id, collection=collection, field=field, data={key: self.default(o=val, _type=get_annotations(CAST).get(key, None), field="{}.{}".format(field, key), collection=collection, _id=_id) for key, val in dict(o).items()})
         elif length <= 2:
             key__type, value__type = (str, types[0]) if length == 1 else (types[0], types[1])
             return CAST(_id=_id, collection=collection, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k), collection=collection, _id=_id) for k, v in dict(o).items()})
@@ -97,7 +101,7 @@ class SakiTypeEncoder():
         length = len(_types)
         CAST = self.list if not issubclass(_type, self.list) else _type
         if length <= 0:
-            return CAST(_id=_id, collection=collection, field=field, data=[self.default(val, None, field="{}.{}".format(field, index), collection=collection, _id=_id) for index, val in enumerate(i)])
+            return CAST(_id=_id, collection=collection, field=field, data=[self.default(o=val, _type=get_annotations(CAST).get(index, None), field="{}.{}".format(field, index), collection=collection, _id=_id) for index, val in enumerate(i)])
         length -= 1
         for index, value in enumerate(i):
             if length > index:

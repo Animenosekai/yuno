@@ -1,17 +1,30 @@
 from nasse.timer import Timer
 from pymongo import MongoClient
 from mongo_secret import URI
+from saki.client import SakiClient
 
 from saki.objects import SakiDict
 from saki.database import SakiDatabase
 from saki.collection import SakiCollection
 
-client = MongoClient(URI)
+
+class CustomObject(SakiDict):
+    def __init__(self, _id, collection, field, data=None) -> None:
+        print("Initializing CustomObject")
+        super().__init__(_id, collection, field, data)
+
+    hello: str = "world"
+    do_not_exist: str = "this does not exist"
 
 
 class CustomDocument(SakiDict):
+    def __init__(self, _id, collection, field, data=None) -> None:
+        print("Initializing CustomDocument")
+        super().__init__(_id, collection, field, data)
+
     hello: str
     world: str = "heyhey"
+    a: CustomObject
 
 
 class CustomCollection(SakiCollection):
@@ -30,11 +43,28 @@ class CustomDatabase(SakiDatabase):
         super().__init__(client, name)
 
 
-print(CustomDatabase(client, "test_database").__saki_test__.a.world)
+class CustomClient(SakiClient):
+    test_database: CustomDatabase
 
-test_collection = CustomDatabase(client, "test_database").__saki_test__
+    def __init__(self, uri: str):
+        print("Initializing CustomClient")
+        super().__init__(uri)
+
+
+test_document = CustomClient(URI).test_database.__saki_test__.a
+print(test_document)
+print(test_document.hello)
+print(test_document.world)
+print(test_document.a)
+print(test_document.a.hello)
+print(test_document.a.do_not_exist)
+
+# print(CustomDatabase(client, "test_database").__saki_test__.a.world)
+
+# test_collection = CustomDatabase(client, "test_database").__saki_test__
 # test_collection = database.__saki_test__
-print(test_collection.find())
+# print(test_collection.find())
+
 
 """
 with Timer() as timer:
