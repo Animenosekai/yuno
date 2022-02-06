@@ -8,8 +8,11 @@ class SakiList(SakiObject, list):
     An object behaving like a Python list which is linked to the database.
     """
     __storage__: list
-    __overwritten__ = SakiObject.__overwritten__.union(
-        {"__fetch_from_db__", "__lazy_fetch__", "append", "clear", "extend", "pop", "remove", "reverse", "sort", "__iadd__", "__imul__", "__setitem__", "__delitem__"})
+    __overwritten__ = SakiObject.__overwritten__.union({"__fetch_from_db__", "__lazy_fetch__", "__post_verification__",
+                                                       "append", "clear", "extend", "pop", "remove", "reverse", "sort", "__iadd__", "__imul__", "__setitem__", "__delitem__"})
+
+    def __post_verification__(self) -> None:
+        return
 
     def __lazy_fetch__(self, lazy_obj: encoder.LazyObject) -> typing.Any:
         data = list(self.__collection__.__collection__.aggregate([
@@ -101,7 +104,7 @@ class SakiList(SakiObject, list):
         #      {'fruits': ["Apple", "Orange", "Strawberry"]}
         """
         o = encoder.SakiTypeEncoder().default(o, field="{}.{}".format(self.__field__, len(self.__storage__)),
-                                        collection=self.__collection__, _id=self.__id__)
+                                              collection=self.__collection__, _id=self.__id__)
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$push": {self.__field__: encoder.SakiBSONEncoder().default(o)}})
         self.__storage__.append(o)
 

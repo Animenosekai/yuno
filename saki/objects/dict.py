@@ -12,7 +12,7 @@ class SakiDict(_object.SakiObject, dict):
     """
     __storage__: dict
     __overwritten__ = _object.SakiObject.__overwritten__.union(
-        {"__fetch_from_db__", "__lazy_fetch__", "get", "clear", "pop", "popitem", "setdefault", "update"})
+        {"__fetch_from_db__", "__lazy_fetch__", "__post_verification__", "get", "clear", "pop", "popitem", "setdefault", "update"})
 
     def __lazy_fetch__(self, lazy_obj: encoder.LazyObject) -> typing.Any:
         data = list(self.__collection__.__collection__.aggregate([
@@ -35,6 +35,7 @@ class SakiDict(_object.SakiObject, dict):
         data = list(self.__collection__.__collection__.aggregate(pipeline))
         if len(data) <= 0:
             return {}
+
         annotations = self.__annotations__
         data = {k: encoder.SakiTypeEncoder().default(
             v,
@@ -43,8 +44,23 @@ class SakiDict(_object.SakiObject, dict):
             collection=self.__collection__,
             _id=self.__id__
         ) for k, v in data[0].items()}
+
+        # placing LazyObjects
         data.update({field: encoder.LazyObject(field) for field in self.__lazy__})
         return data
+
+    def __post_verification__(self):
+        # adding the defaults
+        defaults = set(dir(self)).difference(set(dir(self.__storage__)).union(self.__overwritten__).union({"__dict__", "__weakref__", "__module__"}))
+        for k in defaults:
+            if k not in self.__storage__:
+                self.__storage__[k] = encoder.SakiTypeEncoder().default(
+                    self.__class__.__dict__[k],
+                    _type=self.__annotations__.get(k, None),
+                    field="{}.{}".format(self.__field__, k),
+                    collection=self.__collection__,
+                    _id=self.__id__
+                )
 
     def get(self, name: str, default: typing.Any = None) -> typing.Any:
         """

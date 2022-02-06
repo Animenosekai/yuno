@@ -82,8 +82,20 @@ class SakiCollection(object):
         results: list[objects.SakiDict] = []
         for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit):
             name = doc.get("_id")
-            results.append(TypeEncoder.default(doc, _type=self.__annotations__.get(
-                name, self.__type__), field="", collection=self, _id=name))
+            cast = self.__annotations__.get(name, self.__type__)
+
+            annotations = encoder.get_annotations(cast)
+
+            data = {k: encoder.SakiTypeEncoder().default(
+                v,
+                _type=annotations.get(k, None),
+                field=k,
+                collection=self,
+                _id=name
+            ) for k, v in doc.items()}
+
+            # results.append(TypeEncoder.default(doc, _type=cast, field="", collection=self, _id=name))
+            results.append(cast(_id=name, collection=self, field="", data=data))
         return results
 
     def index(self, keys: typing.Union[str, list[tuple[str, IndexDirectionType]]], name: str = None, unique: bool = True, background: bool = True, sparse: bool = True, **kwargs) -> None:

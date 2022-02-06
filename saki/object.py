@@ -41,9 +41,21 @@ class SakiObject(object):
     __collection__: "collection.SakiCollection"
 
     def __fetch_from_db__(self) -> typing.Union[list, dict]:
+        """
+        Fetches the data from the database.
+        """
         raise NotImplementedError("This method should be implemented by the child class.")
 
     def __lazy_fetch__(self, lazy_obj: encoder.LazyObject) -> typing.Any:
+        """
+        Fetches the lazy loaded data from the database.
+        """
+        raise NotImplementedError("This method should be implemented by the child class.")
+
+    def __post_verification__(self) -> None:
+        """
+        This method is called after the object has been initialized.
+        """
         raise NotImplementedError("This method should be implemented by the child class.")
 
     def __init__(self, _id: typing.Union[bson.ObjectId, str, int, typing.Any], collection: "collection.SakiCollection", field: str = "", data: typing.Union[dict, list] = None) -> None:
@@ -70,26 +82,18 @@ class SakiObject(object):
         super().__setattr__("__annotations__", self.__annotations__ if hasattr(self, "__annotations__") else {})
 
         super().__setattr__("__storage_attributes__", set(dir(self.__storage__)).difference(self.__overwritten__))
+        self.__post_verification__()
         threading.Thread(target=self._watch_loop, daemon=True).start()
-
-        super().__setattr__("__defaults__", set(dir(self)).difference(self.__storage_attributes__.union(
-            self.__overwritten__).union({"__dict__", "__weakref__", "__module__"})))
 
     def __getitem__(self, name: typing.Union[str, int, slice]) -> None:
         """Gets the attribute 'name' from the database. Example: value = document['name']"""
-        try:
-            data = self.__storage__[name]
-            if isinstance(data, encoder.LazyObject):
-                data = self.__lazy_fetch__(data)
-                data = encoder.SakiTypeEncoder().default(data, _type=self.__annotations__.get(name, None), field="{}.{}".format(
-                    self.__field__, name), collection=self.__collection__, _id=self.__id__)
-                self.__storage__.__setitem__(name, data)
-            return data
-        except KeyError as err:
-            try:
-                return super().__getattribute__(name)
-            except Exception:
-                raise err
+        data = self.__storage__[name]
+        if isinstance(data, encoder.LazyObject):
+            data = self.__lazy_fetch__(data)
+            data = encoder.SakiTypeEncoder().default(data, _type=self.__annotations__.get(name, None), field="{}.{}".format(
+                self.__field__, name), collection=self.__collection__, _id=self.__id__)
+            self.__storage__.__setitem__(name, data)
+        return data
 
     def __getattribute__(self, name: str) -> Any:
         """Gets the attribute 'name' from the object if available (methods, etc.) or from the database. Example: value = document.name"""
