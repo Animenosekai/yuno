@@ -53,20 +53,22 @@ class CustomClient(SakiClient):
         super().__init__(uri)
 
 
-test_client = CustomClient(URI)
-test_database = test_client.test_database
-test_collection = test_database.__saki_test__
-test_document = test_collection.a
-test_object = test_document.a
-print(test_collection.find())
-print(test_collection.find(defered=True))
-print(test_document)
-print(test_document.hello)
-print(test_document.world)
-print(test_document.a)
-print(test_document.a.hello)
-print(test_document.a.do_not_exist)
+with Timer() as t:
+    test_client = CustomClient(URI)
+    test_database = test_client.test_database
+    test_collection = test_database.__saki_test__
+    test_document = test_collection.a
+    test_object = test_document.a
+    print(test_collection.find())
+    print(test_collection.find(defered=True))
+    print(test_document)
+    print(test_document.hello)
+    print(test_document.world)
+    print(test_document.a)
+    print(test_document.a.hello)
+    print(test_document.a.do_not_exist)
 
+print("It took", t.time, "sec. to execute")
 # print(CustomDatabase(client, "test_database").__saki_test__.a.world)
 
 # test_collection = CustomDatabase(client, "test_database").__saki_test__

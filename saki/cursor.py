@@ -34,7 +34,7 @@ class Cursor():
         return self
 
     def __repr__(self) -> str:
-        return "Cursor({})".format(self.id)
+        return "{}(id={})".format(self.__class__.__name__, self.id)
 
     @property
     def collection(self) -> "collection.SakiCollection":
