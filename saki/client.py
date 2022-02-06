@@ -12,42 +12,48 @@ class BuildInfo():
     def __init__(self, data: dict) -> None:
         self.data = dict(data)
 
-        self.version = str(self.data.get("version"))
-        self.version_array = [int(v) for v in self.data.get("versionArray", [])]
         self.git_version = str(self.data.get("gitVersion"))
-
-        self.loader_flags = str(self.data.get("loaderFlags"))
-        self.compiler_flags = str(self.data.get("compilerFlags"))
+        self.version_array = [int(v) for v in self.data.get("versionArray", [])]
+        self.version = str(self.data.get("version"))
 
         self.openssl = self.data.get("openssl")
         self.javascript_engine = str(self.data.get("javascriptEngine"))
         self.bits = int(self.data.get("bits"))
         self.debug = bool(self.data.get("debug"))
-        self.max_bson_object_size = float(self.data.get("maxBsonObjectSize"))  # float or int?
+        self.max_bson_object_size = int(self.data.get("maxBsonObjectSize"))  # float or int?
         self.storage_engines = [str(e) for e in self.data.get("storageEngines", [])]
         self.modules = [str(m) for m in self.data.get("modules", [])]
-        self.ok = int(self.data.get("ok"))
 
         # these got removed because deprecated and unstable
         # self.sys_info = self.data.get("sysInfo")
         # self.allocator = str(self.data.get("allocator"))
+        # self.build_environment = dict(self.data.get("buildEnvironment"))
+
+    def __repr__(self) -> str:
+        return "BuildInfo(version={}, javascript_engine='{}', bits={}, debug={})".format(self.version, self.javascript_engine, self.bits, self.debug)
 
 
 class SakiClient():
-    __overwritten__ = {"__overwritten__", "URI", "__annotations__", "__client__", "__realtime__", "__callbacks__", "__init__", "address", "close", "database_names",
+    __overwritten__ = {"__overwritten__", "URI", "__annotations__", "__client__", "__options__", "__realtime__", "__callbacks__", "__init__", "address", "close", "database_names",
                        "drop_database", "get_database", "server_info", "_watch_loop", "watch", "on", "__getitem__", "__getattribute__", "__repr__", "__setattr__", "__delattr__"}
 
     URI: str
     __annotations__: dict[str, type]
     __client__: pymongo.MongoClient
+    __options__: dict[str, typing.Any] = {}
 
     __realtime__: bool = False
     __callbacks__: dict[OperationType, list[typing.Callable]] = {}
 
-    def __init__(self, uri: str):
+    def __init__(self, uri: str, tz_aware: bool = True, connect: bool = True, **kwargs) -> None:
+        kwargs.update({
+            "tz_aware": tz_aware,
+            "connect": connect,
+        })
         super().__setattr__("URI", str(uri))
+        super().__setattr__("__options__", kwargs)
         super().__setattr__("__annotations__", self.__annotations__ if hasattr(self, "__annotations__") else {})
-        super().__setattr__("__client__", pymongo.MongoClient(uri))
+        super().__setattr__("__client__", pymongo.MongoClient(uri, **kwargs))
 
     @property
     def address(self):
@@ -151,7 +157,7 @@ class SakiClient():
 
     def __setattr__(self, name, value):
         if name == "URI":
-            return self.__init__(uri=value)  # reinitializing the client because it's a different one
+            return self.__init__(uri=value, **self.__options__)  # reinitializing the client because it's a different one
         if name == "__realtime__" and not self.__realtime__ and value:
             super().__setattr__(name, value)
             return threading.Thread(target=self._watch_loop, daemon=True).start()
