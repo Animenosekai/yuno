@@ -15,21 +15,21 @@ class SakiDict(_object.SakiObject, dict):
         {"__fetch_from_db__", "__lazy_fetch__", "__post_verification__", "get", "clear", "pop", "popitem", "setdefault", "update"})
 
     def __lazy_fetch__(self, lazy_obj: encoder.LazyObject) -> typing.Any:
-        data = list(self.__collection__.__collection__.aggregate([
-            {"$match": {"_id": encoder.SakiBSONEncoder().default(self.__id__)}},
-            {"$replaceRoot": {"newRoot": "${}".format(self.__field__)}},
-            {"$project": {"_id": False, lazy_obj.field: True}}
-        ]))
+        pipeline = [{"$match": {"_id": encoder.SakiBSONEncoder().default(self.__id__)}}]
+        if self.__field__:
+            pipeline.append({"$replaceRoot": {"newRoot": "${}".format(self.__field__)}})
+        pipeline.append({"$project": {"_id": False, lazy_obj.field: True}})
+
+        data = list(self.__collection__.__collection__.aggregate(pipeline))
         if len(data) <= 0:
             raise ValueError("The field '{}.{}' does not exist in the document '{}' on collection {}.".format(
                 self.__field__, lazy_obj.field, self.__id__, self.__collection__))
         return data[0][lazy_obj.field]
 
     def __fetch_from_db__(self) -> typing.Union[list, dict]:
-        pipeline = [
-            {'$match': {'_id': encoder.SakiBSONEncoder().default(self.__id__)}},
-            {'$replaceRoot': {'newRoot': '${}'.format(self.__field__)}}
-        ]
+        pipeline = [{'$match': {'_id': encoder.SakiBSONEncoder().default(self.__id__)}}]
+        if self.__field__:
+            pipeline.append({'$replaceRoot': {'newRoot': '${}'.format(self.__field__)}})
         if len(self.__lazy__) > 0:
             pipeline.append({'$unset': [str(attribute) for attribute in self.__lazy__]})
         data = list(self.__collection__.__collection__.aggregate(pipeline))

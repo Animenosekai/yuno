@@ -22,6 +22,8 @@ class CustomDocument(SakiDict):
         print("Initializing CustomDocument")
         super().__init__(_id, collection, field, data)
 
+    __lazy__ = ["hello"]
+
     hello: str
     world: str = "heyhey"
     a: CustomObject
