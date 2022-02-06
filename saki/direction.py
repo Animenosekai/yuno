@@ -2,6 +2,7 @@ import pymongo
 import typing
 
 IndexDirectionType = typing.Literal[1, -1, "2d", "geoHaystack", "2dsphere", "hashed", "text"]
+SortDirectionType = typing.Literal[1, -1]
 
 
 class IndexDirection:
@@ -12,3 +13,8 @@ class IndexDirection:
     GEOSPHERE = pymongo.GEOSPHERE
     HASHED = pymongo.HASHED
     TEXT = pymongo.TEXT
+
+
+class SortDirection:
+    ASCENDING = pymongo.ASCENDING
+    DESCENDING = pymongo.DESCENDING

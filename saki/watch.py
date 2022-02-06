@@ -18,18 +18,6 @@ class Operation():
     INVALIDATE: OperationType = "invalidate"
 
 
-def create_match_filter(_id: str, field: str, operation: OperationType) -> dict:
-    match = {
-        "operationType": operation,
-        "$or": [
-            {"fullDocument._id": _id},
-            {"documentKey._id": _id}
-        ]
-    }
-    if operation == Operation.UPDATE:
-        pass
-
-
 class WatchEvent():
     class Namespace:
         def __init__(self, data: dict) -> None:
@@ -150,7 +138,7 @@ class Watch():
         self.__stream__ = watching_object.watch(pipeline, full_document, **kwargs)
         self.__closed__ = False
 
-    def __next__(self): # alias
+    def __next__(self):  # alias
         return self.next()
 
     def next(self) -> WatchEvent:
@@ -233,11 +221,6 @@ class Watch():
     @property
     def alive(self):
         """Does this cursor have the potential to return more data?
-
-        .. note:: Even if :attr:`alive` is ``True``, :meth:`next` can raise
-            :exc:`StopIteration` and :meth:`try_next` can return ``None``.
-
-        .. versionadded:: 3.8
         """
         return self._cursor.alive
 

@@ -5,11 +5,20 @@ import pymongo.database
 import pymongo.collection
 
 from saki import encoder, objects, database
+from saki.cursor import Cursor
 from saki.direction import IndexDirectionType
 from saki.watch import OperationType, Watch
 
 BSONEncoder = encoder.SakiBSONEncoder()
 TypeEncoder = encoder.SakiTypeEncoder()
+
+
+class DocumentsCursor(Cursor):
+    def next(self) -> "objects.SakiDict":
+        return super().next()
+
+    def __iter__(self) -> typing.Iterator["objects.SakiDict"]:
+        return super().__iter__()
 
 
 class SakiCollection(object):
@@ -34,7 +43,7 @@ class SakiCollection(object):
         super().__setattr__("__collection__", database.__database__.get_collection(name))
         threading.Thread(target=self._watch_loop, daemon=True).start()
 
-    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, defered: bool = False, **kwargs) -> typing.Iterable["objects.SakiDict"]:
+    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, defered: bool = False, **kwargs) -> typing.Union[DocumentsCursor, list["objects.SakiDict"]]:
         """
         Find documents in the collection
 
@@ -73,11 +82,10 @@ class SakiCollection(object):
             projection = None
 
         if defered:
-            def _generator():
-                for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit):
-                    name = doc.get("_id")
-                    yield TypeEncoder.default(doc, _type=self.__annotations__.get(name, self.__type__), field="", collection=self, _id=name)
-            return _generator
+            def type_encode(obj: dict):
+                name = obj.get("_id")
+                return TypeEncoder.default(obj, _type=self.__annotations__.get(name, self.__type__), field="", collection=self, _id=name)
+            return DocumentsCursor(self.__collection__.find(filter=filter, projection=projection, limit=limit), verification=type_encode)
 
         results: list[objects.SakiDict] = []
         for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit):
@@ -226,3 +234,7 @@ class SakiCollection(object):
 
     def __repr__(self):
         return "SakiCollection('{}')".format(self.__name__)
+
+    def __contains__(self, _id: typing.Any) -> bool:
+        """If 'obj' is in the current object. Example: if 'obj' in document: ..."""
+        return self.find(_id=_id, limit=1, include=["_id"]) > 0
