@@ -24,7 +24,7 @@ class DocumentsCursor(Cursor):
 class SakiCollection(object):
     __type__: "objects.SakiDict" = None
     __overwritten__ = {"__type__", "__overwritten__", "__name__", "__annotations__", "__database__", "__collection__", "__class__",  # we need to overwrite this to avoid getting the super class
-                       "__init__", "find", "index", "watch", "on", "_watch_loop", "__realtime__", "callbacks", "__delitem__", "__delattr__", "__setitem__", "__setattr__", "__getitem__", "__getattr__", "__repr__"}
+                       "__init__", "count", "find", "index", "watch", "on", "_watch_loop", "__realtime__", "callbacks", "__delitem__", "__delattr__", "__setitem__", "__setattr__", "__getitem__", "__getattr__", "__repr__"}
 
     __name__: str
     __annotations__: dict[str, type]
@@ -42,6 +42,20 @@ class SakiCollection(object):
         super().__setattr__("__database__", database)
         super().__setattr__("__collection__", database.__database__.get_collection(name))
         threading.Thread(target=self._watch_loop, daemon=True).start()
+
+    def count(self, filter: dict = None, **kwargs) -> int:
+        """
+        Returns the number of documents in the collection.
+
+        Parameters
+        ----------
+        filter: dict, default=None
+            The filter to apply to the count.
+        **kwargs:
+            Keyword arguments to pass to pymongo's `count_documents`· method.
+        """
+        filter = filter if filter is not None else {}
+        return self.__collection__.count_documents(filter, **kwargs)
 
     def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, defered: bool = False, **kwargs) -> typing.Union[DocumentsCursor, list["objects.SakiDict"]]:
         """
@@ -84,7 +98,18 @@ class SakiCollection(object):
         if defered:
             def type_encode(obj: dict):
                 name = obj.get("_id")
-                return TypeEncoder.default(obj, _type=self.__annotations__.get(name, self.__type__), field="", collection=self, _id=name)
+                cast = self.__annotations__.get(name, self.__type__)
+
+                annotations = encoder.get_annotations(cast)
+
+                data = {k: encoder.SakiTypeEncoder().default(
+                    v,
+                    _type=annotations.get(k, None),
+                    field=k,
+                    collection=self,
+                    _id=name
+                ) for k, v in obj.items()}
+                return cast(_id=name, collection=self, field="", data=data)
             return DocumentsCursor(self.__collection__.find(filter=filter, projection=projection, limit=limit), verification=type_encode)
 
         results: list[objects.SakiDict] = []
@@ -237,4 +262,4 @@ class SakiCollection(object):
 
     def __contains__(self, _id: typing.Any) -> bool:
         """If 'obj' is in the current object. Example: if 'obj' in document: ..."""
-        return self.find(_id=_id, limit=1, include=["_id"]) > 0
+        return self.count({"_id": _id}, limit=1) > 0

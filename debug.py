@@ -59,14 +59,18 @@ with Timer() as t:
     test_collection = test_database.__saki_test__
     test_document = test_collection.a
     test_object = test_document.a
-    print(test_collection.find())
-    print(test_collection.find(defered=True))
-    print(test_document)
-    print(test_document.hello)
-    print(test_document.world)
-    print(test_document.a)
-    print(test_document.a.hello)
-    print(test_document.a.do_not_exist)
+    print("test_collection.count():", test_collection.count())
+    print('"a" in test_collection:', "a" in test_collection)
+    print('"n/a" in test_collection:', "n/a" in test_collection)
+    print("test_collection.find():", test_collection.find())
+    print("test_collection.find(defered=True):", test_collection.find(defered=True))
+    print("list(test_collection.find(defered=True))", list(test_collection.find(defered=True)))
+    print("test_document:", test_document)
+    print("test_document.hello:", test_document.hello)
+    print("test_document.world:", test_document.world)
+    print("test_document.a:", test_document.a)
+    print("test_document.a.hello:", test_document.a.hello)
+    print("test_document.a.do_not_exist:", test_document.a.do_not_exist)
 
 print("It took", t.time, "sec. to execute")
 # print(CustomDatabase(client, "test_database").__saki_test__.a.world)
