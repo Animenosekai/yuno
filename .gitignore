@@ -129,3 +129,6 @@ dmypy.json
 
 # MongoDB Secret
 mongo_secret.py
+
+# MongoDB tests
+test/*

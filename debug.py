@@ -55,6 +55,7 @@ class CustomClient(SakiClient):
 
 with Timer() as t:
     test_client = CustomClient(URI)
+    print(test_client)
     test_database = test_client.test_database
     test_collection = test_database.__saki_test__
     test_document = test_collection.a

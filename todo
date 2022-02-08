@@ -1,0 +1,2 @@
+- typing.Union, etc. handling in the type encoder
+- with (__enter__/__exit__) syntax handling

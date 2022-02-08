@@ -4,6 +4,7 @@ import typing
 import pymongo
 import pymongo.database
 
+from saki.launcher import MongoDB
 from saki import database as saki_database
 from saki.watch import OperationType, Watch
 
@@ -34,10 +35,11 @@ class BuildInfo():
 
 
 class SakiClient():
-    __overwritten__ = {"__overwritten__", "URI", "__annotations__", "__client__", "__options__", "__realtime__", "__callbacks__", "__init__", "address", "close", "database_names",
+    __overwritten__ = {"__overwritten__", "host", "port", "__annotations__", "__client__", "__options__", "__realtime__", "__callbacks__", "__init__", "address", "close", "database_names",
                        "drop_database", "get_database", "server_info", "_watch_loop", "watch", "on", "__getitem__", "__getattribute__", "__repr__", "__setattr__", "__delattr__"}
 
-    URI: str
+    host: str
+    port: int
     __annotations__: dict[str, type]
     __client__: pymongo.MongoClient
     __options__: dict[str, typing.Any] = {}
@@ -45,15 +47,25 @@ class SakiClient():
     __realtime__: bool = False
     __callbacks__: dict[OperationType, list[typing.Callable]] = {}
 
-    def __init__(self, uri: str, tz_aware: bool = True, connect: bool = True, **kwargs) -> None:
+    def __init__(self, host: typing.Union[str, list[str], MongoDB], port: int = None, tz_aware: bool = True, connect: bool = True, **kwargs) -> None:
+        if isinstance(host, MongoDB):
+            host = host.host
         kwargs.update({
+            "host": host,
+            "port": port,
             "tz_aware": tz_aware,
-            "connect": connect,
+            "connect": connect
         })
-        super().__setattr__("URI", str(uri))
+        super().__setattr__("__client__", pymongo.MongoClient(**kwargs))
+        address = self.__client__.address
+        if address is not None:
+            super().__setattr__("host", address[0])
+            super().__setattr__("port", address[1])
+        else:
+            super().__setattr__("host", host)
+            super().__setattr__("port", port)
         super().__setattr__("__options__", kwargs)
         super().__setattr__("__annotations__", self.__annotations__ if hasattr(self, "__annotations__") else {})
-        super().__setattr__("__client__", pymongo.MongoClient(uri, **kwargs))
 
     @property
     def address(self):
@@ -153,11 +165,13 @@ class SakiClient():
         return self.__getitem__(name)
 
     def __repr__(self):
-        return "SakiClient('{}')".format(self.URI)
+        return "SakiClient(host='{}', port={})".format(self.host, self.port)
 
     def __setattr__(self, name, value):
-        if name == "URI":
-            return self.__init__(uri=value, **self.__options__)  # reinitializing the client because it's a different one
+        if name == "host":
+            return self.__init__(host=value, **self.__options__)  # reinitializing the client because it's a different one
+        if name == "port":
+            return self.__init__(port=value, **self.__options__)  # reinitializing the client because it's a different one
         if name == "__realtime__" and not self.__realtime__ and value:
             super().__setattr__(name, value)
             return threading.Thread(target=self._watch_loop, daemon=True).start()
