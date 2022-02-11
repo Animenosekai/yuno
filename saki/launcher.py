@@ -388,7 +388,6 @@ class MongoDB(Configuration):
         data = dict(data)
         net = data.get("net", {})
         self.__init__(**{
-            "process": self.process,
             "host": net.get("bindIp", self.host),
             "port": net.get("port", self.port),
             "db_path": data.get("storage", {}).get("dbPath", self.db_path),
@@ -431,12 +430,15 @@ class MongoDB(Configuration):
                 raise RuntimeError(_runtime_error_message(reason="No successfull confirmation",
                                    message="Saki couldn't find the confirmation that MongoDB successfully launched.", output=mongo_output))
             for line in mongo_output.split("\n"):
-                if "forked process" in line:
-                    pid = int("".join([char for char in line if char.isdigit()]))
-                    self.__process__ = psutil.Process(pid)
-                    if not keep_alive:
-                        atexit.register(self.kill)
-                    return
+                try:
+                    if "forked process" in line:
+                        pid = int("".join([char for char in line if char.isdigit()]))
+                        self.__process__ = psutil.Process(pid)
+                        if not keep_alive:
+                            atexit.register(self.kill)
+                        return
+                except Exception:
+                    continue  # to raise a NO PID FOUND exception if there is an error
             raise RuntimeError(_runtime_error_message(reason="No PID found",
                                message="MongoDB may have been started but Saki could not find its PID.", output=mongo_output))
         # raise NotImplementedError("Synchronous MongoDB is not implemented yet.")
@@ -450,7 +452,7 @@ class MongoDB(Configuration):
         code = process.poll()
         if code is not None:
             raise RuntimeError(_runtime_error_message(reason="Non-zero code exit",
-                                                      message="MongoDB exited with a {} code before starting.".format(code), output=output))
+                               message="MongoDB exited with a {} code before starting.".format(code)))
 
         # there is no timeout no more because mongodb doesn't flush its stdout so we can't wait for it
         # raise RuntimeError(_runtime_error_message(
