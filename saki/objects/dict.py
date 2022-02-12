@@ -1,5 +1,6 @@
 import typing
 
+import nasse.utils
 from nasse.utils.annotations import Default
 from saki import encoder
 
@@ -205,3 +206,30 @@ class SakiDict(_object.SakiObject, dict):
         copied.update(iterable or [], **kwargs)
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
+
+    def to_dict(self, exclude: typing.Union[str, list[str]] = None, camelCase: bool = False) -> dict:
+        """
+        Returns the current object as a dictionary.
+
+        Parameters
+        ----------
+        exclude : str or list[str], default=None
+            The field(s) to exclude from the dictionary.
+        camelCase : bool, default=False
+            If True, the keys of the dictionary will be camelCased.
+
+        Example
+        --------
+        >>> document.name.to_dict()
+        {'first': 'John', 'last': 'Doe'}
+        """
+        data = self.__storage__
+        if exclude is None:
+            exclude = []
+        elif isinstance(exclude, str):
+            exclude = [exclude]
+        for e in exclude:
+            data.pop(e, None)
+        if camelCase:
+            return {nasse.utils.sanitize.toCamelCase(k): v for k, v in data.items()}
+        return data

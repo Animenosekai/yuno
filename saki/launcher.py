@@ -359,10 +359,7 @@ class MongoDB(Configuration):
             "monitoring": self.monitoring
         }
         if camelCase:
-            for key, value in result.items():
-                result.pop(key, None)
-                key_split = key.split("_")
-                result[key_split[0] + "".join([k.capitalize() for k in key_split[1:]])] = value
+            return {nasse.utils.sanitize.toCamelCase(k): v for k, v in result.items()}
         return result
 
     def dumps(self, indent: int = 4) -> str:
