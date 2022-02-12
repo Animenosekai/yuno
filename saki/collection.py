@@ -6,7 +6,7 @@ import pymongo.collection
 
 from saki import encoder, objects, database
 from saki.cursor import Cursor
-from saki.direction import IndexDirectionType
+from saki.direction import IndexDirectionType, SortDirectionType
 from saki.watch import OperationType, Watch
 
 BSONEncoder = encoder.SakiBSONEncoder()
@@ -22,19 +22,39 @@ class DocumentsCursor(Cursor):
 
 
 class SakiCollection(object):
+    """
+    An object that represents a collection in the database.
+    """
     __type__: "objects.SakiDict" = None
+    """The default document type"""
     __overwritten__ = {"__type__", "__overwritten__", "__name__", "__annotations__", "__database__", "__collection__", "__class__",  # we need to overwrite this to avoid getting the super class
                        "__init__", "count", "find", "index", "watch", "on", "_watch_loop", "__realtime__", "callbacks", "__delitem__", "__delattr__", "__setitem__", "__setattr__", "__getitem__", "__getattr__", "__repr__"}
 
     __name__: str
+    """The name of the collection"""
     __annotations__: dict[str, type]
+    """The documents annotations for the collection"""
     __database__: "database.SakiDatabase"
+    """The database this collection is in"""
     __collection__: pymongo.collection.Collection
+    """The PyMongo collection object"""
 
     __realtime__: bool = False
+    """Whether the collection updates in realtime or not"""
     __callbacks__: dict[OperationType, list[typing.Callable]] = {}
+    """The callbacks registered for realtime updates"""
 
     def __init__(self, database: "database.SakiDatabase", name: str = "__saki_test__") -> None:
+        """
+        Create a new collection
+
+        Parameters
+        ----------
+        database: SakiDatabase
+            The database this collection is in
+        name: str, default="__saki_test__"
+            The name of the collection
+        """
         if self.__type__ is None:
             super().__setattr__("__type__", objects.SakiDict)
         super().__setattr__("__name__", str(name))
@@ -57,21 +77,24 @@ class SakiCollection(object):
         filter = filter if filter is not None else {}
         return self.__collection__.count_documents(filter, **kwargs)
 
-    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, defered: bool = False, **kwargs) -> typing.Union[DocumentsCursor, list["objects.SakiDict"]]:
+    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, sort: list[tuple[str, SortDirectionType]] = None, defered: bool = False, **kwargs) -> typing.Union[DocumentsCursor, list["objects.SakiDict"]]:
         """
         Find documents in the collection
 
         Parameters
         ----------
-        filter:
+        filter: dict, default=None
             A dictionary of filters to apply to the query.
-        include:
+        include: list[str], default=None
             A list of attributes to include in the result.
-        exclude:
+        exclude: list[str], default=None
             A list of attributes to exclude from the result.
-        limit:
+        limit: int, default=0
             The maximum number of documents to return.
-        defered:
+        sort: list[tuple[str, SortDirectionType]], default=None
+            A list of tuples of attributes to sort by.
+            Each tuple is a field and the direction to sort by.
+        defered: bool, default=False
             If True, a generator will be returned and results will be yielded when necessary.
             If False, the results will be returned immediately and everything will be in memory.
         **kwargs:
@@ -110,10 +133,10 @@ class SakiCollection(object):
                     _id=name
                 ) for k, v in obj.items()}
                 return cast(_id=name, collection=self, field="", data=data)
-            return DocumentsCursor(self.__collection__.find(filter=filter, projection=projection, limit=limit), verification=type_encode)
+            return DocumentsCursor(self.__collection__.find(filter=filter, projection=projection, limit=limit, sort=sort), verification=type_encode)
 
         results: list[objects.SakiDict] = []
-        for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit):
+        for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit, sort=sort):
             name = doc.get("_id")
             cast = self.__annotations__.get(name, self.__type__)
 
@@ -163,9 +186,15 @@ class SakiCollection(object):
     # TODO: Implement update() and aggregate()
 
     def update(self, *args, **kwargs):
+        """
+        Update a document in the collection
+        """
         return self.__collection__.update_one(*args, **kwargs)
 
     def aggregate(self, pipeline, *args, **kwargs):
+        """
+        Get an aggregation of documents in the collection
+        """
         return self.__collection__.aggregate(pipeline, *args, **kwargs)
 
     def _watch_loop(self):
@@ -196,7 +225,33 @@ class SakiCollection(object):
 
     def watch(self, operations: list[OperationType] = None, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
         """
-        Returns an iterator (Watch) to watch the database for changes.
+        Returns an iterator (Watch) to watch the collection for changes.
+
+        Parameters
+        ----------
+        operations: list[OperationType]
+            The operations to watch for.
+        pipeline: list[dict]
+            The pipeline to watch for.
+        full_document: str
+            The full_document to watch for.
+        error_limit: int
+            The number of errors to allow before raising an exception.
+        error_expiration: float
+            The number of seconds to wait before raising an exception.
+        kwargs:
+            The kwargs to pass to the watch.
+
+        Returns
+        -------
+        Watch
+            The watch object.
+
+        Example
+        --------
+        >>> watch = collection.watch()
+        >>> for event in watch:
+        >>>     print(event)
         """
         final_pipeline = []
         if operations:
@@ -227,15 +282,51 @@ class SakiCollection(object):
         self.__realtime__ = True
 
     def __delitem__(self, name: str) -> None:
+        """
+        Deletes a document from the collection.
+
+        Example
+        --------
+        >>> del collection["special_document"]
+        """
         self.__collection__.delete_one({"_id": name})
 
     def __delattr__(self, name: str) -> None:
+        """
+        Deletes a document from the collection.
+
+        Example
+        --------
+        >>> del collection.special_document
+        """
         self.__delitem__(name)
 
     def __setitem__(self, name: str, value: dict) -> None:
+        """
+        Replaces or sets a document in the collection.
+
+        Example
+        --------
+        >>> collection["special_document"] = {"_id": "special_document", "name": "Special Document"}
+        #    Initial Document
+        #      {"_id": "special_document", "name": "Test", "favorites": 2}
+        #    Updated Document
+        #      {"_id": "special_document", "name": "Special Document"}
+        """
         self.__collection__.replace_one({"_id": name}, BSONEncoder.default(value), upsert=True)
 
     def __setattr__(self, name: str, value: dict) -> None:
+        """
+        Replaces or sets a document in the collection.
+
+        Example
+        --------
+        >>> collection.special_document = {"_id": "special_document", "name": "Special Document"}
+        #    Initial Document
+        #      {"_id": "special_document", "name": "Test", "favorites": 2}
+        #    Updated Document
+        #      {"_id": "special_document", "name": "Special Document"}
+        """
         if name == "__name__":
             return self.__init__(database=self.__database__, name=value)  # reinitializing the collection because it's a different one
         if name == "__realtime__":
@@ -247,17 +338,32 @@ class SakiCollection(object):
         self.__setitem__(name, value)
 
     def __getitem__(self, name: str) -> "objects.SakiDict":
+        """
+        Gets a document from the collection.
+
+        Example
+        --------
+        >>> document = collection["special_document"]
+        """
         data = self.find(_id=name, limit=1)
         if len(data) <= 0:
             raise KeyError("No document with name '{}' found".format(name))
         return data[0]
 
     def __getattribute__(self, name: str) -> typing.Union["objects.SakiDict", typing.Any]:
+        """
+        Gets a document from the collection.
+
+        Example
+        --------
+        >>> document = collection.special_document
+        """
         if name in super().__getattribute__("__overwritten__"):
             return super().__getattribute__(name)
         return self.__getitem__(name)
 
     def __repr__(self):
+        """String representation of the collection."""
         return "SakiCollection('{}')".format(self.__name__)
 
     def __contains__(self, _id: typing.Any) -> bool:

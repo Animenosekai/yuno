@@ -12,6 +12,10 @@ from nasse import logging, utils
 
 
 class LazyObject():
+    """
+    An object representing a lazy loaded value in an object.
+    """
+
     def __init__(self, field: str) -> None:
         self.field = str(field).strip(".")
 
@@ -23,21 +27,42 @@ BSON_ENCODABLE = (bool, int, bson.Int64, float, str, datetime.datetime, bson.Reg
 
 
 def get_annotations(o: object):
+    """
+    Internal function to get the annotations of an object.
+
+    Parameters
+    ----------
+    o : object
+        The object to get the annotations of.
+
+    Returns
+    -------
+    dict[str, Any]
+        The annotations of the object.
+    """
     return o.__annotations__ if hasattr(o, "__annotations__") else {}
 
 
 class SakiBSONEncoder():
+    """
+    The custom BSON encoder
+    """
+
     def __init__(self) -> None:
+        """To initialize the encoder."""
         from saki import object  # noqa
         self.object = object.SakiObject
 
     def encode_dict(self, o: dict[typing.Any, typing.Any]):
+        """Correctly encoding an unpackable value"""
         return {str(k): self.default(v) for k, v in o.items()}
 
     def encode_iterable(self, i: typing.Iterable[typing.Any]):
+        """Encoding an iterable value"""
         return [self.default(x) for x in i]
 
     def encode_file(self, f: io.BytesIO):
+        """Correctly encoding a file."""
         position = f.tell()  # storing the current position
         content = f.read()  # read it (place the cursor at the end)
         f.seek(position)  # go back to the original position
@@ -46,6 +71,7 @@ class SakiBSONEncoder():
         return str(content)
 
     def default(self, o: typing.Any) -> typing.Any:
+        """Encodes any value"""
         if o is None:
             return None
         if isinstance(o, self.object):
@@ -71,14 +97,19 @@ IMMUTABLES = (bool, int, bson.Int64, float, str, bson.Binary, bson.ObjectId, bso
 
 
 class SakiTypeEncoder():
+    """
+    The custom type encoder
+    """
 
     def __init__(self) -> None:
+        """To initialize the encoder."""
         from saki import objects
         self.dict = objects.SakiDict
         self.list = objects.SakiList
         self.bson_encoder = SakiBSONEncoder()
 
     def encode_dict(self, o: dict[typing.Any, typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
+        """Correctly encoding an unpackable value"""
         types = typing.get_args(_type)
         length = len(types)
         CAST = self.dict if not issubclass(_type, self.dict) else _type
@@ -97,6 +128,7 @@ class SakiTypeEncoder():
         return CAST(_id=_id, collection=collection, field=field, data=o)
 
     def encode_iterable(self, i: typing.Iterable[typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
+        """Encoding an iterable value"""
         _types = typing.get_args(_type)
         length = len(_types)
         CAST = self.list if not issubclass(_type, self.list) else _type
@@ -111,6 +143,7 @@ class SakiTypeEncoder():
         return CAST(_id=_id, collection=collection, field=field, data=i)
 
     def default(self, o: typing.Any, _type: T = None, field: str = "", collection=None, _id: str = None) -> T:
+        """Encodes any value"""
         if isinstance(o, LazyObject):
             return LazyObject(field.split(".")[-1])
 

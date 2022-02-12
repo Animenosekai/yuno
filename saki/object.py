@@ -21,6 +21,7 @@ class SakiObject(object):
     """
     __overwritten__: set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__defaults__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
                                  "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "delete", "reload", "watch", "on"}
+    """All of the attributes defined by Saki"""
 
     __lazy__: list[str] = []
     """
@@ -31,24 +32,47 @@ class SakiObject(object):
     This should be used for attributes which are expensive to load or not needed in normal circumstances.
     """
     __storage__: typing.Union[dict, list]
+    """Where the data is stored"""
     __storage_attributes__: set[str] = set()
+    """Attributes for the data storage object"""
     __defaults__: set[str] = set()
+    """The default defaults values defined by the user"""
 
     __id__: typing.Union[bson.ObjectId, str, int, typing.Any]
+    """The _id of the document the object is in"""
     __field__: str = ""
+    """The field of the object in the document"""
     __realtime__: bool = False
+    """Wether or not to enable real-time object updating"""
     __callbacks__: dict[OperationType, list[typing.Callable]] = {}
+    """Callbacks for real-time updating"""
     __collection__: "collection.SakiCollection"
+    """The collection the document belongs to"""
 
     def __fetch_from_db__(self) -> typing.Union[list, dict]:
         """
         Fetches the data from the database.
+
+        Returns
+        -------
+        dict | list
+            The data from the database.
         """
         raise NotImplementedError("This method should be implemented by the child class.")
 
     def __lazy_fetch__(self, lazy_obj: encoder.LazyObject) -> typing.Any:
         """
         Fetches the lazy loaded data from the database.
+
+        Parameters
+        ----------
+        lazy_obj: encoder.LazyObject
+            The lazy loaded object to fetch.
+
+        Returns
+        -------
+        typing.Any
+            The data from the database.
         """
         raise NotImplementedError("This method should be implemented by the child class.")
 
@@ -85,7 +109,7 @@ class SakiObject(object):
         self.__post_verification__()
         threading.Thread(target=self._watch_loop, daemon=True).start()
 
-    def __getitem__(self, name: typing.Union[str, int, slice]) -> None:
+    def __getitem__(self, name: typing.Union[str, int, slice]) -> typing.Any:
         """Gets the attribute 'name' from the database. Example: value = document['name']"""
         data = self.__storage__[name]
         if isinstance(data, encoder.LazyObject):
@@ -231,6 +255,32 @@ class SakiObject(object):
     def watch(self, operations: list[OperationType] = None, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
         """
         Returns an iterator (Watch) to watch the database for changes.
+
+        Parameters
+        ----------
+        operations: list[OperationType]
+            The operations to watch for.
+        pipeline: list[dict]
+            The pipeline to watch for.
+        full_document: str
+            The full_document to watch for.
+        error_limit: int
+            The number of errors to allow before raising an exception.
+        error_expiration: float
+            The number of seconds to wait before raising an exception.
+        kwargs:
+            The kwargs to pass to the watch.
+
+        Returns
+        -------
+        Watch
+            The watch object.
+
+        Example
+        --------
+        >>> watch = document.watch()
+        >>> for event in watch:
+        >>>     print(event)
         """
         final_pipeline = []
         # matches the current document and the drop/rename/dropDatabase events

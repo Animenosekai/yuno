@@ -3,13 +3,14 @@ import pathlib
 import time
 import threading
 import typing
-from subprocess import PIPE, Popen
+import subprocess
 
 import nasse.utils
 import psutil
 import yaml
 
 TimezoneType = typing.Literal["iso8601-utc", "iso8601-local"]
+"""MongoDB timestamps formats type"""
 
 
 class Timezone:
@@ -37,7 +38,9 @@ class Timezone:
 
 
 TERMINAL = "terminal"
+"""The 'terminal' log destination"""
 SYSLOG = "syslog"
+"""The 'syslog' log destination"""
 
 
 class Configuration:
@@ -412,6 +415,11 @@ class MongoDB(Configuration):
             The number of seconds to wait for the process to start.
         keep_alive: bool, default=False
             Whether to keep the process alive or not (fork will be enabled)
+
+        Raises
+        ------
+        RuntimeError
+            If the process is failed to start.
         """
         fork = self.fork
         if keep_alive:
@@ -419,7 +427,10 @@ class MongoDB(Configuration):
                 nasse.utils.logging.log("The 'fork' option will be enabled because 'keep_alive' is enabled",
                                         level=nasse.utils.logging.LogLevels.WARNING)
             fork = True
-        process = Popen([executable] + self.to_cli_args(), stdout=PIPE)
+        try:
+            process = subprocess.Popen([executable] + self.to_cli_args(), stdout=subprocess.PIPE)
+        except subprocess.CalledProcessError as err:
+            raise RuntimeError("Failed to start the MongoDB process") from err
         if fork:
             code = process.wait()
             mongo_output = process.stdout.read().decode("utf-8")
@@ -464,6 +475,14 @@ class MongoDB(Configuration):
         self.__process__ = psutil.Process(process.pid)
 
     def kill(self):
+        """
+        Kills the MongoDB process.
+
+        Raises
+        ------
+        RuntimeError
+            If the process is not running.
+        """
         if self.__process__ is None:
             raise RuntimeError(_runtime_error_message(reason="No process", message="MongoDB is not running."))
         self.__process__.kill()
@@ -474,5 +493,6 @@ class MongoDB(Configuration):
     close = kill
 
     def restart(self):
+        """Restarts the MongoDB process."""
         self.kill()
         self.start()

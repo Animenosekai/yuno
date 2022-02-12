@@ -2,12 +2,23 @@ import typing
 import time
 import pymongo.change_stream
 import pymongo.collection
+import pymongo.database
+import pymongo.mongo_client
 
 
 OperationType = typing.Literal["insert", "update", "delete", "replace", "drop", "rename", "dropDatabase", "invalidate"]
 
 
 class Operation():
+    """
+    An enum for the different event that can occur on MongoDB
+
+    Example
+    -------
+    >>> from saki.direction import Operation
+    >>> Operation.INSERT
+    'insert'
+    """
     UPDATE: OperationType = "update"
     INSERT: OperationType = "insert"
     DELETE: OperationType = "delete"
@@ -19,7 +30,14 @@ class Operation():
 
 
 class WatchEvent():
+    """
+    An object representing an event on MongoDB.
+    """
     class Namespace:
+        """
+        The namespace the event occured in
+        """
+
         def __init__(self, data: dict) -> None:
             self.database = data.get("db")
             self.collection = data.get("coll")
@@ -28,11 +46,16 @@ class WatchEvent():
             return self.__getattribute__(key)
 
     class LSID:
+        """
+        The id of the event
+        """
+
         def __init__(self, data: dict) -> None:
             self.id = data.get("id", None)
             self.uid = data.get("uid", None)
 
     def __init__(self, data: dict) -> None:
+        """Initialize the object with raw event data"""
         self.id = self._id = data.get("_id")
         self.operation: OperationType = data.get("operationType")
         self.document = data.get("fullDocument", None)
@@ -123,10 +146,27 @@ class Watch():
     # pipeline=pipeline, full_document=None, resume_after=resume_state["token"], max_await_time_ms=None,
     #    batch_size=None, collation=None, start_at_operation_time=None, session=None, start_after=None
 
-    def __init__(self, watching_object: pymongo.collection.Collection, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> None:
+    def __init__(self, watching_object: typing.Union[pymongo.collection.Collection, pymongo.database.Database, pymongo.mongo_client.MongoClient], pipeline: list[dict] = None, full_document: typing.Union[str, bool] = False, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> None:
         """
         Initializes the stream.
+
+        Parameters
+        ----------
+        watching_object: pymongo.collection.Collection, pymongo.database.Database, pymongo.mongo_client.MongoClient
+            The object to watch.
+        pipeline: list[dict]
+            The pipeline to use.
+        full_document: bool, str
+            To return the full document when the event is an UpdateEvent.
+        error_limit: int
+            The number of errors before the stream is closed.
+        error_expiration: float
+            The number of seconds before the error count is reset.
+        kwargs:
+            The arguments to pass to the stream.
         """
+        if isinstance(full_document, bool):
+            full_document = "updateLookup" if full_document else None
         self.pipeline = pipeline
         self.full_document = full_document
         self.kwargs = kwargs
@@ -139,11 +179,71 @@ class Watch():
         self.__closed__ = False
 
     def __next__(self):  # alias
+        """
+        Get the next event (blocking operation)
+
+        Returns
+        -------
+        WatchEvent
+            The next event to occur on the object.
+
+        Example
+        -------
+        >>> document = db.collection.document
+        >>> watch_obj = document.watch()
+        >>> for event in watch_obj:
+        >>>     print(event) # only called when an event occurs on the database
+        """
         return self.next()
+
+    def _get_right_event(self, data: dict) -> WatchEvent:
+        """
+        An internal function to get the right event type from raw event data.
+
+        Parameters
+        ----------
+        data: dict
+            The raw event data.
+
+        Returns
+        -------
+        WatchEvent
+            The event.
+        """
+        operation = data.get("operationType", None)
+        if operation == Operation.UPDATE:
+            return UpdateEvent(data)
+        elif operation == Operation.INSERT:
+            return InsertEvent(data)
+        elif operation == Operation.DELETE:
+            return DeleteEvent(data)
+        elif operation == Operation.REPLACE:
+            return ReplaceEvent(data)
+        elif operation == Operation.DROP:
+            return DropEvent(data)
+        elif operation == Operation.RENAME:
+            return RenameEvent(data)
+        elif operation == Operation.DROP_DATABASE:
+            return DropDatabaseEvent(data)
+        elif operation == Operation.INVALIDATE:
+            return InvalidateEvent(data)
+        return WatchEvent(data)
 
     def next(self) -> WatchEvent:
         """
         Get the next event (blocking operation)
+
+        Returns
+        -------
+        WatchEvent
+            The next event to occur on the object.
+
+        Example
+        -------
+        >>> document = db.collection.document
+        >>> watch_obj = document.watch()
+        >>> for event in watch_obj:
+        >>>     print(event) # only called when an event occurs on the database
         """
         if self.__closed__:
             raise StopIteration("Stream is closed")
@@ -168,59 +268,49 @@ class Watch():
             self.__stream__ = self.__watching_object__.watch(self.pipeline, self.full_document, **self.kwargs)
             return self.__next__()
 
-        operation = data.get("operationType", None)
-        if operation == Operation.UPDATE:
-            return UpdateEvent(data)
-        elif operation == Operation.INSERT:
-            return InsertEvent(data)
-        elif operation == Operation.DELETE:
-            return DeleteEvent(data)
-        elif operation == Operation.REPLACE:
-            return ReplaceEvent(data)
-        elif operation == Operation.DROP:
-            return DropEvent(data)
-        elif operation == Operation.RENAME:
-            return RenameEvent(data)
-        elif operation == Operation.DROP_DATABASE:
-            return DropDatabaseEvent(data)
-        elif operation == Operation.INVALIDATE:
-            return InvalidateEvent(data)
-        return WatchEvent(data)
+        return self._get_right_event(data)
 
-    def try_next(self):
+    def try_next(self) -> typing.Any:
         """
         Try to get the next event without raising an exception and without waiting.
+
+        Returns
+        -------
+        WatchEvent
         """
         try:
-            return self.__stream__.try_next()
+            data = self.__stream__.try_next()
+            if data is not None:
+                return self._get_right_event(data)
+            return data
         except StopIteration:
             return None
 
     def close(self):
-        """
-        Closes the stream.
-        """
+        """Closes the stream."""
         self.__closed__ = True
         self.__stream__.close()
 
     def resume(self):
-        """
-        Resume the stream from the last known state.
-        """
+        """Resume the stream from the last known state."""
         self.kwargs["resume_after"] = self.__state__["token"]
         self.__stream__ = self.__watching_object__.watch(self.pipeline, self.full_document, **self.kwargs)
         self.__closed__ = False
 
     @property
     def resume_token(self):
-        """
-        Get the resume token, which is used to resume the stream if failed.
-        """
+        """Get the resume token, which is used to resume the stream if failed."""
         return self.__stream__.resume_token
 
     @property
     def alive(self):
-        """Does this cursor have the potential to return more data?
+        """
+        Get whether the stream is alive.
+
+        Returns
+        -------
+        bool
+            Whether the stream is alive.
         """
         return self._cursor.alive
 
