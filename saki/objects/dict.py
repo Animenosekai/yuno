@@ -13,7 +13,7 @@ class SakiDict(_object.SakiObject, dict):
     """
     __storage__: dict
     __overwritten__ = _object.SakiObject.__overwritten__.union(
-        {"__fetch_from_db__", "__lazy_fetch__", "__post_verification__", "get", "clear", "pop", "popitem", "setdefault", "update"})
+        {"__fetch_from_db__", "__lazy_fetch__", "__post_verification__", "get", "clear", "pop", "popitem", "setdefault", "update", "to_dict"})
 
     def __lazy_fetch__(self, lazy_obj: encoder.LazyObject) -> typing.Any:
         pipeline = [{"$match": {"_id": encoder.SakiBSONEncoder().default(self.__id__)}}]

@@ -117,7 +117,7 @@ class Configuration:
         with open(file, "w") as f:
             f.write(self.dumps())
 
-    def to_dict(self) -> None:
+    def to_dict(self, camelCase: bool = False) -> None:
         """
         Returns a `dict` representation of the Configuration object
 
@@ -226,7 +226,7 @@ class LogConfig(Configuration):
 
         return results
 
-    def to_dict(self) -> dict:
+    def to_dict(self, camelCase: bool = False) -> dict:
         return {
             "verbosity": self.verbosity,
             "path": str(self.path),
@@ -400,7 +400,7 @@ class MongoDB(Configuration):
         if "systemLog" in data:
             self.log_config.loads(data["systemLog"], decode=False)
 
-    def start(self, executable: str = "mongod", wait: float = 3, keep_alive: bool = False) -> None:
+    def start(self, executable: str = "mongod", wait: float = 3, keep_alive: bool = False, extra: dict = None, **kwargs) -> None:
         """
         Starts a MongoDB process.
 
@@ -409,7 +409,7 @@ class MongoDB(Configuration):
         executable: str, default="mongod"
             The path to the MongoDB executable.
         wait: float, default=3
-            The number of seconds to wait for the process to start.
+            The number of seconds to wait for the process to start (when `fork` == False).
         keep_alive: bool, default=False
             Whether to keep the process alive or not (fork will be enabled)
 
@@ -418,6 +418,14 @@ class MongoDB(Configuration):
         RuntimeError
             If the process is failed to start.
         """
+        extra = extra or {}
+        extra.update({"--" + k: v for k, v in kwargs.items()})
+        added_args = []
+        for k, v in extra:
+            if str(k).replace(" ", "") != "":
+                added_args.append(k)
+            if str(v).replace(" ", "") != "":
+                added_args.append(v)
         fork = self.fork
         if keep_alive:
             if fork:
@@ -425,7 +433,7 @@ class MongoDB(Configuration):
                                         level=nasse.utils.logging.LogLevels.WARNING)
             fork = True
         try:
-            process = subprocess.Popen([executable] + self.to_cli_args(), stdout=subprocess.PIPE)
+            process = subprocess.Popen([executable] + self.to_cli_args() + added_args, stdout=subprocess.PIPE)
         except subprocess.CalledProcessError as err:
             raise RuntimeError("Failed to start the MongoDB process") from err
         if fork:

@@ -84,15 +84,15 @@ class SakiClient():
 
         Parameters
         ----------
-        host : str, list[str], MongoDB
+        host: str, list[str], MongoDB
             The host or list of hostnames to connect to. You can use `host` to pass in a URI string or a MongoDB object (in which case you won't need to use `port`).
-        port : int
+        port: int
             The port to connect to.
-        tz_aware : bool
+        tz_aware: bool
             Whether to use timezone aware datetimes or not.
-        connect : bool
+        connect: bool
             Whether to connect before making any operation to the server or not.
-        kwargs : dict
+        kwargs: dict
             Options to pass to the PyMongo client.
         """
         if isinstance(host, MongoDB):
@@ -312,6 +312,12 @@ class SakiClient():
             super().__setattr__(name, value)
             return threading.Thread(target=self._watch_loop, daemon=True).start()
         super().__setattr__(name, value)
+
+    def __delitem__(self, name):
+        """
+        Drops a database by name.
+        """
+        self.drop_database(name)
 
     def __delattr__(self, name):
         """
