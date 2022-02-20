@@ -585,14 +585,31 @@ object["key"] = {"hello": "world"}
 
 ## How it works
 
+Saki works on top of PyMongo to make all of the operations to MongoDB.
+
 ## Deployment
 
-## Built with
+This module is currently in development and might contain bugs.
+
+Feel free to use it in production if you feel like it is suitable for your production even if you may encounter issues.
 
 ## Contributing
 
-## License
+Pull requests are welcome. For major changes, please open a discussion first to discuss what you would like to change.
+
+Please make sure to update the tests as appropriate.
+
+## Built With
+
+- [Nasse](https://github.com/Animenosekai/Nasse) - Different utils for Python
+- [pymongo](https://docs.mongodb.com/drivers/pymongo/) - To connect to MongoDB databases and make operations
+- [psutil](https://github.com/giampaolo/psutil) - For cross-platform process management
+- [PyYAML](https://github.com/yaml/pyyaml) - To parse YAML files (MongoDB configuration files)
 
 ## Authors
 
-## Acknowledgments
+- **Anime no Sekai** - *Initial work* - [Animenosekai](https://github.com/Animenosekai)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
