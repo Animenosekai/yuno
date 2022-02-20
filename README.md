@@ -601,7 +601,7 @@ Please make sure to update the tests as appropriate.
 
 ## Built With
 
-- [pymongo](https://docs.mongodb.com/drivers/pymongo/) - To connect to MongoDB databases and make operations
+- [PyMongo](https://docs.mongodb.com/drivers/pymongo/) - To connect to MongoDB databases and make operations
 - [psutil](https://github.com/giampaolo/psutil) - For cross-platform process management
 - [PyYAML](https://github.com/yaml/pyyaml) - To parse YAML files (MongoDB configuration files)
 
