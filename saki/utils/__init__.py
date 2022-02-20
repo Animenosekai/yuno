@@ -1,5 +1,5 @@
 """
-A set of utilities used by Saki
+A set of utilities used by Yuno
 """
 
 from . import annotations

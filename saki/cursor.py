@@ -2,8 +2,8 @@ import typing
 
 import pymongo.cursor
 
-from saki import collection
-from saki.direction import SortDirectionType, SortDirection
+from yuno import collection
+from yuno.direction import SortDirectionType, SortDirection
 
 
 class Cursor():
@@ -59,10 +59,10 @@ class Cursor():
         return "{}(id={})".format(self.__class__.__name__, self.id)
 
     @property
-    def collection(self) -> "collection.SakiCollection":
+    def collection(self) -> "collection.YunoCollection":
         """Collection the cursor is iterating over."""
         _collection = self.cursor.collection
-        return collection.SakiCollection(_collection.database, _collection.name)
+        return collection.YunoCollection(_collection.database, _collection.name)
 
     def close(self) -> None:
         """Closes the cursor."""

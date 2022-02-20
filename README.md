@@ -1,21 +1,21 @@
-# `saki`
+# `yuno` (originally: `saki`)
 
  An account and database management framework, completing Nasse
 
 ***Manipulate your databases as if you never leaved Python***
 
-[![PyPI version](https://badge.fury.io/py/saki.svg)](https://pypi.org/project/saki/)
-[![Downloads](https://static.pepy.tech/personalized-badge/saki?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Total%20Downloads)](https://pepy.tech/project/saki)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/saki)](https://pypistats.org/packages/saki)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/saki)](https://pypi.org/project/saki/)
-[![PyPI - Status](https://img.shields.io/pypi/status/saki)](https://pypi.org/project/saki/)
-[![GitHub - License](https://img.shields.io/github/license/Animenosekai/saki)](https://github.com/Animenosekai/saki/blob/master/LICENSE)
-[![GitHub top language](https://img.shields.io/github/languages/top/Animenosekai/saki)](https://github.com/Animenosekai/saki)
-[![CodeQL Checks Badge](https://github.com/Animenosekai/saki/workflows/CodeQL%20Python%20Analysis/badge.svg)](https://github.com/Animenosekai/saki/actions?query=workflow%3ACodeQL)
-[![Pytest](https://github.com/Animenosekai/saki/actions/workflows/pytest.yml/badge.svg)](https://github.com/Animenosekai/saki/actions/workflows/pytest.yml)
-![Code Size](https://img.shields.io/github/languages/code-size/Animenosekai/saki)
-![Repo Size](https://img.shields.io/github/repo-size/Animenosekai/saki)
-![Issues](https://img.shields.io/github/issues/Animenosekai/saki)
+[![PyPI version](https://badge.fury.io/py/yuno.svg)](https://pypi.org/project/yuno/)
+[![Downloads](https://static.pepy.tech/personalized-badge/yuno?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Total%20Downloads)](https://pepy.tech/project/yuno)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/yuno)](https://pypistats.org/packages/yuno)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/yuno)](https://pypi.org/project/yuno/)
+[![PyPI - Status](https://img.shields.io/pypi/status/yuno)](https://pypi.org/project/yuno/)
+[![GitHub - License](https://img.shields.io/github/license/Animenosekai/yuno)](https://github.com/Animenosekai/yuno/blob/master/LICENSE)
+[![GitHub top language](https://img.shields.io/github/languages/top/Animenosekai/yuno)](https://github.com/Animenosekai/yuno)
+[![CodeQL Checks Badge](https://github.com/Animenosekai/yuno/workflows/CodeQL%20Python%20Analysis/badge.svg)](https://github.com/Animenosekai/yuno/actions?query=workflow%3ACodeQL)
+[![Pytest](https://github.com/Animenosekai/yuno/actions/workflows/pytest.yml/badge.svg)](https://github.com/Animenosekai/yuno/actions/workflows/pytest.yml)
+![Code Size](https://img.shields.io/github/languages/code-size/Animenosekai/yuno)
+![Repo Size](https://img.shields.io/github/repo-size/Animenosekai/yuno)
+![Issues](https://img.shields.io/github/issues/Animenosekai/yuno)
 
 ## Getting Started
 
@@ -41,28 +41,28 @@ I haven't checked the minimum requirements for the MongoDB features used in this
 
 Also this framework has been tested on MongoDB `v4.4.5` (locally) and MongoDB `v4.4.12` (on Atlas).
 
-Always check if your Python version works with `saki` before using it in production.
+Always check if your Python version works with `yuno` before using it in production.
 
 ## Installing
 
 ### Option 1: From PyPI
 
 ```bash
-pip install --upgrade saki
+pip install --upgrade yuno
 ```
 
 ### Option 2: From Git
 
 ```bash
-pip install --upgrade git+https://github.com/Animenosekai/saki
+pip install --upgrade git+https://github.com/Animenosekai/yuno
 ```
 
 You can check if you successfully installed it by printing out its version:
 
 ```bash
-$ python -c "import saki; print(saki.__version__)"
+$ python -c "import yuno; print(yuno.__version__)"
 # output:
-saki v1.0
+yuno v1.0
 ```
 
 ## Purpose
@@ -84,7 +84,7 @@ To start a process you will need to create a new `MongoDB` object with the confi
 > Example
 
 ```python
-from saki import MongoDB
+from yuno import MongoDB
 
 server = MongoDB()
 server.start() # this will launch MongoDB and wait for it to run
@@ -100,7 +100,7 @@ The `start` method can get extra parameters that will modify the way MongoDB is 
 
 #### Configuration
 
-MongoDB configuration is made easy with Saki!
+MongoDB configuration is made easy with Yuno!
 
 You can just pass configuration values into `MongoDB` to configure it!
 
@@ -135,8 +135,8 @@ This parameter is a class on its own because of its complexity.
 > Example
 
 ```python
-from saki import MongoDB, LogConfig
-from saki.launcher import Timezone
+from yuno import MongoDB, LogConfig
+from yuno.launcher import Timezone
 
 server = MongoDB(db_path="./db/test", fork=True, monitoring=False, log_config=LogConfig(verbosity=2, path="./logs/db/test.log", timezone=Timezone.UTC))
 
@@ -154,12 +154,12 @@ You can also load the config from a file or dump it into a file using the built 
 - `dump` will dump the configuration to a YAML file
 - `to_dict` (or `dict(configuration_object)`) will dump the configuration to a dictionary (you have a `camelCase` parameter to make the keys camelCased)
 
-This is especially useful when you already have a configuration file or want to share the configuration to another user not using Saki.
+This is especially useful when you already have a configuration file or want to share the configuration to another user not using Yuno.
 
 > Example
 
 ```python
-from saki import MongoDB
+from yuno import MongoDB
 
 server = MongoDB() # will load all of the default configurations
 server.load("./db/mongo.conf") # will reinitialize the object with the config file, keeping the default values for values that aren't specified
@@ -174,7 +174,7 @@ for key, val in server.to_dict(camelCase=True):
 
 ### Connecting to a MongoDB process
 
-Wether you use the built-in `MongoDB` object to launch a MongoDB process or just host it on the cloud/on another server, you will need to connect to it using `SakiClient`.
+Wether you use the built-in `MongoDB` object to launch a MongoDB process or just host it on the cloud/on another server, you will need to connect to it using `YunoClient`.
 
 Here are the parameters used to connect to a server:
 
@@ -188,12 +188,12 @@ Here are the parameters used to connect to a server:
 
 ```python
 # Using the "MongoDB" object
-from saki import MongoDB
-from saki import SakiClient
+from yuno import MongoDB
+from yuno import YunoClient
 
 server = MongoDB()
 server.start()
-client = SakiClient(server) # you are connecting to the server here
+client = YunoClient(server) # you are connecting to the server here
 ```
 
 ### Using the client
@@ -206,27 +206,27 @@ client.database_name
 client["database_name"]
 ```
 
-In both case, this will return the same SakiDatabase object.
+In both case, this will return the same YunoDatabase object.
 
-The `client["database_name"]` syntax is especially useful if you use a database with the name of a method overwritten by SakiClient (for example `watch`, `server_info`, `address`, `close`, etc.).
+The `client["database_name"]` syntax is especially useful if you use a database with the name of a method overwritten by YunoClient (for example `watch`, `server_info`, `address`, `close`, etc.).
 
 You can find a list of overwritten attributes under the `__overwritten__` attribute.
 
-SakiClient can be used to establish the database schema.
+YunoClient can be used to establish the database schema.
 
 This basically means that you can already type hint databases by creating your own clients.
 
 ```python
-from saki import SakiClient
-from saki import SakiDatabase
+from yuno import YunoClient
+from yuno import YunoDatabase
 
-class MyClient(SakiClient):
-    production: SakiDatabase # you can here use your custom databases (refer to the "Using databases" section)
-    scores: SakiDatabase
+class MyClient(YunoClient):
+    production: YunoDatabase # you can here use your custom databases (refer to the "Using databases" section)
+    scores: YunoDatabase
 
-client = MyClient("mongodb+srv://anise:password@sakitest.host.mongodb.net/production")
+client = MyClient("mongodb+srv://anise:password@yunotest.host.mongodb.net/production")
 client.production # will return the `production` database
-# SakiDatabase('production')
+# YunoDatabase('production')
 ```
 
 This helps with establishing a schema and helps your code editor guide you when writing code, resulting in less time searching for types, available databases and looking back at your code.
@@ -237,7 +237,7 @@ It has serveral other methods, which are picked and adapted from the original Py
 
 - `close` is used to close the connection to the server
 - `database_names` is used to retrieve the list of databases created.
-- `server_info` will return some info about the current MongoDB server in a special object called `BuildInfo` (`saki.client.BuildInfo`).
+- `server_info` will return some info about the current MongoDB server in a special object called `BuildInfo` (`yuno.client.BuildInfo`).
 - `watch` returns a cursor to watch the cluster for changes and events.
 - `on` will register a callback function which will be called when the specified operation/event is performed on the server.
 
@@ -264,36 +264,36 @@ database.collection_name
 database["collection_name"]
 ```
 
-In both case, this will return the same SakiCollection object.
+In both case, this will return the same YunoCollection object.
 
-The `database["collection_name"]` syntax is especially useful if you use a database with the name of a method overwritten by SakiDatabase (for example `watch`, `on`, `command`, `aggregate`, etc.).
+The `database["collection_name"]` syntax is especially useful if you use a database with the name of a method overwritten by YunoDatabase (for example `watch`, `on`, `command`, `aggregate`, etc.).
 
 You can find a list of overwritten attributes under the `__overwritten__` attribute.
 
-`SakiCollection` is the class returned by `SakiDatabase` when querying for one.
+`YunoCollection` is the class returned by `YunoDatabase` when querying for one.
 
 ```python
 # using the client variable defined before
 
 accounts = production_database.accounts
-# this is SakiCollection object
+# this is YunoCollection object
 ```
 
 You can define your own databases to type hint them (for the same reasons as before)
 
 ```python
-from saki import SakiClient, SakiDatabase, SakiCollection
+from yuno import YunoClient, YunoDatabase, YunoCollection
 
-class MyDatabase(SakiDatabase):
-    accounts: SakiCollection # you will also be able to create your own collections
+class MyDatabase(YunoDatabase):
+    accounts: YunoCollection # you will also be able to create your own collections
 
-class MyClient(SakiClient):
+class MyClient(YunoClient):
     production: MyDatabase
 
-client = MyClient("mongodb+srv://anise:password@sakitest.host.mongodb.net/production")
+client = MyClient("mongodb+srv://anise:password@yunotest.host.mongodb.net/production")
 production_database = client.production # will return the custom MyDatabase object and code editors will help you write code
 # MyDatabase('production')
-production_database.accounts # this is a SakiCollection object
+production_database.accounts # this is a YunoCollection object
 ```
 
 It has serveral other methods, which are picked and adapted from the original PyMongo `MongoClient`.
@@ -329,40 +329,40 @@ collection.document_id
 collection["document_id"]
 ```
 
-In both case, this will return the same SakiCollection object.
+In both case, this will return the same YunoCollection object.
 
-The `collection["document_id"]` syntax is especially useful if you use a document with the _id of a method overwritten by SakiCollection (for example `watch`, `on`, `find`, `aggregate`, etc.).
+The `collection["document_id"]` syntax is especially useful if you use a document with the _id of a method overwritten by YunoCollection (for example `watch`, `on`, `find`, `aggregate`, etc.).
 
 You can find a list of overwritten attributes under the `__overwritten__` attribute.
 
-`SakiCollection` is the class returned by `SakiDatabase` when querying for one.
+`YunoCollection` is the class returned by `YunoDatabase` when querying for one.
 
 ```python
 # using the client variable defined before
 
 accounts = production_database.accounts
-# this is SakiCollection object
+# this is YunoCollection object
 ```
 
 You can define your own collections to type hint them (for the same reasons as before)
 
 ```python
 from bson import ObjectId
-from saki import SakiClient, SakiDatabase, SakiCollection, SakiDict
+from yuno import YunoClient, YunoDatabase, YunoCollection, YunoDict
 
-class MyCollection(SakiCollection):
-    special_document: SakiDict # you will also be able to create your own documents
+class MyCollection(YunoCollection):
+    special_document: YunoDict # you will also be able to create your own documents
 
-class MyDatabase(SakiDatabase):
+class MyDatabase(YunoDatabase):
     accounts: MyCollection
 
-class MyClient(SakiClient):
+class MyClient(YunoClient):
     production: MyDatabase
 
-client = MyClient("mongodb+srv://anise:password@sakitest.host.mongodb.net/production")
+client = MyClient("mongodb+srv://anise:password@yunotest.host.mongodb.net/production")
 production_database = client.production
 accounts = production_database.accounts
-accounts.special_document # this is a SakiDict object
+accounts.special_document # this is a YunoDict object
 ```
 
 There is a special `__type__` attribute which is used to define the default type of the documents in the collection.
@@ -421,34 +421,34 @@ document.object_name
 document["object_name"]
 ```
 
-In both case, this will return the same SakiObject object.
+In both case, this will return the same YunoObject object.
 
-The `document["object_name"]` syntax is especially useful if you use an object with its name being of a method overwritten by SakiObject (for example `watch`, `on`, `reload`, `delete`, etc.).
+The `document["object_name"]` syntax is especially useful if you use an object with its name being of a method overwritten by YunoObject (for example `watch`, `on`, `reload`, `delete`, etc.).
 
 You can find a list of overwritten attributes under the `__overwritten__` attribute.
 
-`SakiObject` is the class returned by `SakiCollection` when querying for one.
+`YunoObject` is the class returned by `YunoCollection` when querying for one.
 
 ```python
 # using the client variable defined before
 
 document = accounts.special_document
-# this is SakiObject object
+# this is YunoObject object
 ```
 
 You can define your own objects to type hint them (for the same reasons as before)
 
 ```python
-from saki import SakiClient, SakiDatabase, SakiCollection, SakiDict
+from yuno import YunoClient, YunoDatabase, YunoCollection, YunoDict
 
 
 
-class CustomObject(SakiDict):
+class CustomObject(YunoDict):
     hello: str = "world"
     do_not_exist: str = "this does not exist"  # its default value if not found in db
 
 
-class CustomDocument(SakiDict):
+class CustomDocument(YunoDict):
     __lazy__ = ["hello"]  # lazy loaded attribute
 
     hello: str
@@ -456,30 +456,30 @@ class CustomDocument(SakiDict):
     a: CustomObject  # nested object ^^
 
 
-class SpecialDocument(SakiDict):
+class SpecialDocument(YunoDict):
     __lazy__ = ["specialAttributes"]
 
     specialAttributes: list[str]
     version: str
 
 
-class CustomCollection(SakiCollection):
+class CustomCollection(YunoCollection):
     __type__ = CustomDocument  # the default type of document in the collection
 
     special: SpecialDocument  # a special document type
 
 
-class CustomDatabase(SakiDatabase):
-    __saki_test__: CustomCollection
+class CustomDatabase(YunoDatabase):
+    __yuno_test__: CustomCollection
 
 
-class CustomClient(SakiClient):
+class CustomClient(YunoClient):
     test_database: CustomDatabase
 
 
-client = CustomClient("mongodb+srv://anise:password@sakitest.host.mongodb.net/production")
+client = CustomClient("mongodb+srv://anise:password@yunotest.host.mongodb.net/production")
 test_database = client.test_database
-test_collection = test_database.__saki_test__
+test_collection = test_database.__yuno_test__
 special_doc = test_collection.special
 special_doc # this is a SpecialDocument object
 document = test_collection.any_document
@@ -498,10 +498,10 @@ You can use type hints to define the schema of some attributes.
 
 Objects acts as regular python objects.
 
-For example, a SakiDict object can be used as a regular python dict:
+For example, a YunoDict object can be used as a regular python dict:
 
 ```python
-object # this is a SakiDict object
+object # this is a YunoDict object
 object.get("key") # this is a str
 object.pop("key") # remove the key from the object
 object.items() # this is a list of tuples
@@ -512,10 +512,10 @@ for key, value in object.items():
 del object["key"]
 ```
 
-and a SakiList object can be used as a regular python list:
+and a YunoList object can be used as a regular python list:
 
 ```python
-object # this is a SakiList object
+object # this is a YunoList object
 object.append("value") # add a value to the list
 object.pop() # remove the last value from the list
 object.extend(["value1", "value2"]) # add multiple values to the list
@@ -529,7 +529,7 @@ for value in object:
     print(value)
 ```
 
-Some methods don't come from regular Python data types, but are specific to SakiObjects:
+Some methods don't come from regular Python data types, but are specific to YunoObjects:
 
 > Examples
 
@@ -541,16 +541,16 @@ Some methods don't come from regular Python data types, but are specific to Saki
 Instead of the `reload` method, you also have a `__realtime__` attribute which you can set to `True` if you want the object to follow the updates on the database (you will have an object which is always up to date).
 
 ```python
-document # this is a SakiObject (SakiDict, SakiList, etc.) object
+document # this is a YunoObject (YunoDict, YunoList, etc.) object
 document.__realtime__ = True
 # this will make the object follow the updates on the database
 
-class CustomObject(SakiDict):
+class CustomObject(YunoDict):
     __realtime__ = True
 
     hello: str = "world"
 
-class CustomCollection(SakiCollection):
+class CustomCollection(YunoCollection):
     __type__ = CustomObject
 
 # any object coming from the CustomCollection collection will be a CustomObject object and will be a "realtime" object, following the updates on the database
@@ -585,7 +585,7 @@ object["key"] = {"hello": "world"}
 
 ## How it works
 
-Saki works on top of PyMongo to make all of the operations to MongoDB.
+Yuno works on top of PyMongo to make all of the operations to MongoDB.
 
 ## Deployment
 

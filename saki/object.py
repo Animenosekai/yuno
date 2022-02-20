@@ -5,23 +5,23 @@ import threading
 import bson
 
 if typing.TYPE_CHECKING:
-    from saki import collection
+    from yuno import collection
 
-from saki import encoder
-from saki.watch import DropDatabaseEvent, DropEvent, OperationType, RenameEvent, UpdateEvent, Watch
+from yuno import encoder
+from yuno.watch import DropDatabaseEvent, DropEvent, OperationType, RenameEvent, UpdateEvent, Watch
 
 Any = typing.TypeVar("Any")
 
 # TODO: Update some functions to avoid using dict.copy() and list.copy() and take up less memory.
 
 
-class SakiObject(object):
+class YunoObject(object):
     """
     An object behaving like a Python object which is linked to the database to update stuff on the fly.
     """
     __overwritten__: set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__defaults__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
                                  "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "delete", "reload", "watch", "on"}
-    """All of the attributes defined by Saki"""
+    """All of the attributes defined by Yuno"""
 
     __lazy__: list[str] = []
     """
@@ -46,7 +46,7 @@ class SakiObject(object):
     """Wether or not to enable real-time object updating"""
     __callbacks__: dict[OperationType, list[typing.Callable]] = {}
     """Callbacks for real-time updating"""
-    __collection__: "collection.SakiCollection"
+    __collection__: "collection.YunoCollection"
     """The collection the document belongs to"""
 
     def __fetch_from_db__(self) -> typing.Union[list, dict]:
@@ -82,7 +82,7 @@ class SakiObject(object):
         """
         raise NotImplementedError("This method should be implemented by the child class.")
 
-    def __init__(self, _id: typing.Union[bson.ObjectId, str, int, typing.Any], collection: "collection.SakiCollection", field: str = "", data: typing.Union[dict, list] = None) -> None:
+    def __init__(self, _id: typing.Union[bson.ObjectId, str, int, typing.Any], collection: "collection.YunoCollection", field: str = "", data: typing.Union[dict, list] = None) -> None:
         """
         Initializes the object by fetching the data from the database and intializing it.
 
@@ -90,7 +90,7 @@ class SakiObject(object):
         ----------
         _id: bson.ObjectId | str | int | Any
             The _id of the master document.
-        collection: SakiCollection
+        collection: YunoCollection
             The collection the object belongs to.
         field: str, default=""
             The field the object belongs to.
@@ -114,7 +114,7 @@ class SakiObject(object):
         data = self.__storage__[name]
         if isinstance(data, encoder.LazyObject):
             data = self.__lazy_fetch__(data)
-            data = encoder.SakiTypeEncoder().default(data, _type=self.__annotations__.get(name, None), field="{}.{}".format(
+            data = encoder.YunoTypeEncoder().default(data, _type=self.__annotations__.get(name, None), field="{}.{}".format(
                 self.__field__, name), collection=self.__collection__, _id=self.__id__)
             self.__storage__.__setitem__(name, data)
         return data
@@ -132,11 +132,11 @@ class SakiObject(object):
 
     def __setitem__(self, name: str, value: typing.Any, update: bool = True) -> None:
         """Sets the attribute 'name' to 'value' in the database. Example: document['name'] = value"""
-        value = encoder.SakiTypeEncoder().default(value, _type=self.__annotations__.get(name, None), field="{}.{}".format(
+        value = encoder.YunoTypeEncoder().default(value, _type=self.__annotations__.get(name, None), field="{}.{}".format(
             self.__field__, name), collection=self.__collection__, _id=self.__id__)
         if update:
             self.__collection__.__collection__.update_one(
-                {"_id": self.__id__}, {"$set": {"{}.{}".format(self.__field__, name): encoder.SakiBSONEncoder().default(value)}})
+                {"_id": self.__id__}, {"$set": {"{}.{}".format(self.__field__, name): encoder.YunoBSONEncoder().default(value)}})
         self.__storage__.__setitem__(name, value)
 
     def __setattr__(self, name: str, value: typing.Any) -> None:

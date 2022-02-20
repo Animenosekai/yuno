@@ -6,8 +6,8 @@ import pymongo
 import pymongo.collection
 import pymongo.database
 
-from saki import client, collection as saki_collection
-from saki.watch import OperationType, Watch
+from yuno import client, collection as yuno_collection
+from yuno.watch import OperationType, Watch
 
 ProfilingLevelType = typing.Literal[0, 1, 2]
 
@@ -18,13 +18,13 @@ class ProfilingLevel:
     ALL = pymongo.ALL
 
 
-class SakiDatabase(object):
+class YunoDatabase(object):
     __overwritten__ = {"__init__", "aggregate", "command", "create_collection", "drop_collection", "get_collection", "list_collection_names", "list_collections", "profiling_info",
                        "profiling_level", "set_profiling_level", "validate_collection", "watch", "on", "_watch_loop", "__setattr__", "__getitem__", "__getattribute__", "__delattr__", "__delitem__", "__repr__", "__name__", "__client__", "__database__", "__realtime__", "__callbacks__", "__annotations__"}
 
     __name__: str
     """The name of the database"""
-    __client__: "client.SakiClient"
+    __client__: "client.YunoClient"
     """The client that this database is connected to"""
     __database__: pymongo.database.Database
     """The PyMongo database object"""
@@ -34,15 +34,15 @@ class SakiDatabase(object):
     __callbacks__: dict[OperationType, list[typing.Callable]] = {}
     """The callbacks registered for realtime updates"""
 
-    def __init__(self, client: "client.SakiClient", name: str = "__sakit_test__") -> None:
+    def __init__(self, client: "client.YunoClient", name: str = "__yunot_test__") -> None:
         """
         Instantiate the database object
 
         Parameters
         ----------
-        client : SakiClient
+        client : YunoClient
             The client that this database is connected to
-        name : str, default="__sakit_test__"
+        name : str, default="__yunot_test__"
             The name of the database
         """
         super().__setattr__("__name__", str(name))
@@ -84,7 +84,7 @@ class SakiDatabase(object):
         """
         return self.__database__.command(command, *args, **kwargs)
 
-    def create_collection(self, name: str, **kwargs) -> "saki_collection.SakiCollection":
+    def create_collection(self, name: str, **kwargs) -> "yuno_collection.YunoCollection":
         """
         Create a new collection
 
@@ -97,26 +97,26 @@ class SakiDatabase(object):
 
         Returns
         -------
-        SakiCollection
+        YunoCollection
             The created collection
         """
         self.__database__.create_collection(name, **kwargs)
-        return saki_collection.SakiCollection(self, name)  # this should be tested against __annotations__
+        return yuno_collection.YunoCollection(self, name)  # this should be tested against __annotations__
 
-    def drop_collection(self, collection: typing.Union[str, "saki_collection.SakiCollection", pymongo.collection.Collection]) -> None:
+    def drop_collection(self, collection: typing.Union[str, "yuno_collection.YunoCollection", pymongo.collection.Collection]) -> None:
         """
         Drops a collection
 
         Parameters
         ----------
-        collection : str, SakiCollection, or pymongo.collection.Collection
+        collection : str, YunoCollection, or pymongo.collection.Collection
             The collection to drop
         """
-        if isinstance(collection, saki_collection.SakiCollection):
+        if isinstance(collection, yuno_collection.YunoCollection):
             collection = collection.__collection__
         self.__database__.drop_collection(collection)
 
-    def get_collection(self, name: str) -> "saki_collection.SakiCollection":
+    def get_collection(self, name: str) -> "yuno_collection.YunoCollection":
         """
         Get a collection by name
 
@@ -127,10 +127,10 @@ class SakiDatabase(object):
 
         Returns
         -------
-        SakiCollection
+        YunoCollection
             The collection
         """
-        cast = self.__annotations__.get(name, saki_collection.SakiCollection)
+        cast = self.__annotations__.get(name, yuno_collection.YunoCollection)
         return cast(self, name)
 
     def list_collection_names(self, filter: dict[str, str] = None, **kwargs) -> list[str]:
@@ -152,7 +152,7 @@ class SakiDatabase(object):
         kwargs["filter"] = filter
         return self.__database__.list_collection_names(**kwargs)
 
-    def list_collections(self, filter: dict[str, str] = None, **kwargs) -> list["saki_collection.SakiCollection"]:
+    def list_collections(self, filter: dict[str, str] = None, **kwargs) -> list["yuno_collection.YunoCollection"]:
         """
         List all of the collections in this database
 
@@ -165,10 +165,10 @@ class SakiDatabase(object):
 
         Returns
         -------
-        list[SakiCollection]
+        list[YunoCollection]
             The list of collections
         """
-        return [saki_collection.SakiCollection(self, name) for name in self.list_collection_names(filter, **kwargs)]
+        return [yuno_collection.YunoCollection(self, name) for name in self.list_collection_names(filter, **kwargs)]
 
     def profiling_info(self, **kwargs):
         """
@@ -215,13 +215,13 @@ class SakiDatabase(object):
         """
         self.__database__.set_profiling_level(level, **kwargs)
 
-    def validate_collection(self, collection: typing.Union[str, "saki_collection.SakiCollection", pymongo.collection.Collection], structure: bool = False, full: bool = False, background: bool = False, *args, **kwargs) -> dict:
+    def validate_collection(self, collection: typing.Union[str, "yuno_collection.YunoCollection", pymongo.collection.Collection], structure: bool = False, full: bool = False, background: bool = False, *args, **kwargs) -> dict:
         """
         Validate a collection
 
         Parameters
         ----------
-        collection : str, SakiCollection, or pymongo.collection.Collection
+        collection : str, YunoCollection, or pymongo.collection.Collection
             The collection to validate
         structure : bool, default=False
             Whether to validate the structure of the collection
@@ -239,7 +239,7 @@ class SakiDatabase(object):
         dict
             The validation information
         """
-        if isinstance(collection, saki_collection.SakiCollection):
+        if isinstance(collection, yuno_collection.YunoCollection):
             collection = collection.__collection__
         return self.__database__.validate_collection(name_or_collection=collection, scandata=structure, full=full, background=background, *args, **kwargs)
 
@@ -344,11 +344,11 @@ class SakiDatabase(object):
             return threading.Thread(target=self._watch_loop, daemon=True).start()
         super().__setattr__(name, value)
 
-    def __getitem__(self, name: str) -> "saki_collection.SakiCollection":
+    def __getitem__(self, name: str) -> "yuno_collection.YunoCollection":
         """Get a collection from the database. Example: database["collection"]"""
         return self.get_collection(name)
 
-    def __getattribute__(self, name: str) -> typing.Union["saki_collection.SakiCollection", typing.Any]:
+    def __getattribute__(self, name: str) -> typing.Union["yuno_collection.YunoCollection", typing.Any]:
         """
         Get an attribute from the object or a database from the database
 
@@ -371,4 +371,4 @@ class SakiDatabase(object):
 
     def __repr__(self):
         """String representation of the database"""
-        return "SakiDatabase('{}')".format(self.__name__)
+        return "YunoDatabase('{}')".format(self.__name__)

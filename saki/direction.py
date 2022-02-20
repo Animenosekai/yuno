@@ -8,7 +8,7 @@ This is the type of direction to use when creating an index.
 
 Example
 -------
->>> from saki.direction import IndexDirectionType
+>>> from yuno.direction import IndexDirectionType
 >>> IndexDirectionType.ASCENDING
 1
 >>> collection.index("username", IndexDirectionType.ASCENDING)
@@ -20,7 +20,7 @@ This is the type of direction to use when sorting.
 
 Example
 -------
->>> from saki.direction import SortDirectionType
+>>> from yuno.direction import SortDirectionType
 >>> SortDirectionType.ASCENDING
 1
 >>> collection.find(username="Anise", sort=[("age", SortDirectionType.ASCENDING)])
@@ -33,7 +33,7 @@ class IndexDirection:
 
     Example
     -------
-    >>> from saki.direction import IndexDirection
+    >>> from yuno.direction import IndexDirection
     >>> IndexDirection.ASCENDING
     1
     """
@@ -52,7 +52,7 @@ class SortDirection:
 
     Example
     -------
-    >>> from saki.direction import SortDirection
+    >>> from yuno.direction import SortDirection
     >>> SortDirection.ASCENDING
     1
     """

@@ -81,7 +81,7 @@ def log(message: str = "Log", level: LogLevel = LogLevels.DEBUG, step: str = Non
         if level._draw_step:
             formatting["step"] = step if step is not None else caller_name()
         if level._draw_name:
-            formatting["name"] = "Saki"
+            formatting["name"] = "Yuno"
         if level._draw_message:
             formatting["message"] = message
 

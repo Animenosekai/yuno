@@ -1,5 +1,5 @@
 """
-Saki  
+Yuno  
 A database and account management framework to complete Nasse.
 
 > Manipulate your databases as if you never leaved Python!
@@ -7,12 +7,12 @@ A database and account management framework to complete Nasse.
 © Anime no Sekai, 2022
 """
 
-from .client import SakiClient
-from .collection import SakiCollection
-from .database import SakiDatabase
+from .client import YunoClient
+from .collection import YunoCollection
+from .database import YunoDatabase
 from .direction import SortDirection, IndexDirection
 from .launcher import MongoDB, LogConfig
 
-from .objects import SakiDict, SakiList
+from .objects import YunoDict, YunoList
 
 from . import utils

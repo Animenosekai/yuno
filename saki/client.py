@@ -4,9 +4,9 @@ import typing
 import pymongo
 import pymongo.database
 
-from saki.launcher import MongoDB
-from saki import database as saki_database
-from saki.watch import OperationType, Watch
+from yuno.launcher import MongoDB
+from yuno import database as yuno_database
+from yuno.watch import OperationType, Watch
 
 
 class BuildInfo():
@@ -45,7 +45,7 @@ class BuildInfo():
         return "BuildInfo(version={}, javascript_engine='{}', bits={}, debug={})".format(self.version, self.javascript_engine, self.bits, self.debug)
 
 
-class SakiClient():
+class YunoClient():
     """
     The client to communicate with the MongoDB server.
     """
@@ -62,10 +62,10 @@ class SakiClient():
 
     This automatically set when you annotate attributes like this:
 
-    >>> class AccountDatabase(SakiDatabase):
+    >>> class AccountDatabase(YunoDatabase):
     >>>     ...
 
-    >>> class MyClient(SakiClient):
+    >>> class MyClient(YunoClient):
     >>>     account_db: AccountDatabase # this is added to __annotations__ automatically
     """
     __client__: pymongo.MongoClient
@@ -143,20 +143,20 @@ class SakiClient():
         """
         return self.__client__.list_database_names()
 
-    def drop_database(self, database: typing.Union[str, "saki_database.SakiDatabase", pymongo.database.Database]) -> None:
+    def drop_database(self, database: typing.Union[str, "yuno_database.YunoDatabase", pymongo.database.Database]) -> None:
         """
         Drops a database.
 
         Parameters
         ----------
-        database : str, SakiDatabase, pymongo.database.Database
+        database : str, YunoDatabase, pymongo.database.Database
             The database to drop.
         """
-        if isinstance(database, saki_database.SakiDatabase):
+        if isinstance(database, yuno_database.YunoDatabase):
             database = database.__database__
         return self.__client__.drop_database(database)
 
-    def get_database(self, name: str) -> "saki_database.SakiDatabase":
+    def get_database(self, name: str) -> "yuno_database.YunoDatabase":
         """
         Get a database by name.
 
@@ -167,10 +167,10 @@ class SakiClient():
 
         Returns
         -------
-        SakiDatabase
+        YunoDatabase
             The database.
         """
-        cast = self.__annotations__.get(name, saki_database.SakiDatabase)
+        cast = self.__annotations__.get(name, yuno_database.YunoDatabase)
         return cast(self, name)
 
     def server_info(self) -> BuildInfo:
@@ -268,7 +268,7 @@ class SakiClient():
 
         self.__realtime__ = True
 
-    def __getitem__(self, name: str) -> "saki_database.SakiDatabase":
+    def __getitem__(self, name: str) -> "yuno_database.YunoDatabase":
         """
         Get a database by name.
 
@@ -278,7 +278,7 @@ class SakiClient():
         """
         return self.get_database(name)
 
-    def __getattribute__(self, name: str) -> typing.Union["saki_database.SakiDatabase", typing.Any]:
+    def __getattribute__(self, name: str) -> typing.Union["yuno_database.YunoDatabase", typing.Any]:
         """
         Get a database by name.
 
@@ -292,7 +292,7 @@ class SakiClient():
 
     def __repr__(self):
         """A string representation of the object."""
-        return "SakiClient(host='{}', port={})".format(self.host, self.port)
+        return "YunoClient(host='{}', port={})".format(self.host, self.port)
 
     def __setattr__(self, name, value):
         """

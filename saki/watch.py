@@ -15,7 +15,7 @@ class Operation():
 
     Example
     -------
-    >>> from saki.direction import Operation
+    >>> from yuno.direction import Operation
     >>> Operation.INSERT
     'insert'
     """

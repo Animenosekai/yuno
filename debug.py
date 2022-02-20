@@ -1,14 +1,14 @@
 from nasse.timer import Timer
 from pymongo import MongoClient
 from mongo_secret import URI
-from saki.client import SakiClient
+from yuno.client import YunoClient
 
-from saki.objects import SakiDict
-from saki.database import SakiDatabase
-from saki.collection import SakiCollection
+from yuno.objects import YunoDict
+from yuno.database import YunoDatabase
+from yuno.collection import YunoCollection
 
 
-class CustomObject(SakiDict):
+class CustomObject(YunoDict):
     def __init__(self, _id, collection, field, data=None) -> None:
         print("Initializing CustomObject")
         super().__init__(_id, collection, field, data)
@@ -17,7 +17,7 @@ class CustomObject(SakiDict):
     do_not_exist: str = "this does not exist"
 
 
-class CustomDocument(SakiDict):
+class CustomDocument(YunoDict):
     def __init__(self, _id, collection, field, data=None) -> None:
         print("Initializing CustomDocument")
         super().__init__(_id, collection, field, data)
@@ -29,23 +29,23 @@ class CustomDocument(SakiDict):
     a: CustomObject
 
 
-class CustomCollection(SakiCollection):
+class CustomCollection(YunoCollection):
     a: CustomDocument
 
-    def __init__(self, database, name: str = "__saki_test__") -> None:
+    def __init__(self, database, name: str = "__yuno_test__") -> None:
         print("Initializing CustomCollection")
         super().__init__(database, name)
 
 
-class CustomDatabase(SakiDatabase):
-    __saki_test__: CustomCollection
+class CustomDatabase(YunoDatabase):
+    __yuno_test__: CustomCollection
 
-    def __init__(self, client: MongoClient, name: str = "__sakit_test__") -> None:
+    def __init__(self, client: MongoClient, name: str = "__yunot_test__") -> None:
         print("Initializing CustomDatabase")
         super().__init__(client, name)
 
 
-class CustomClient(SakiClient):
+class CustomClient(YunoClient):
     test_database: CustomDatabase
 
     def __init__(self, uri: str):
@@ -57,7 +57,7 @@ with Timer() as t:
     test_client = CustomClient(URI)
     print(test_client)
     test_database = test_client.test_database
-    test_collection = test_database.__saki_test__
+    test_collection = test_database.__yuno_test__
     test_document = test_collection.a
     test_object = test_document.a
     print("test_collection.count():", test_collection.count())
@@ -74,22 +74,22 @@ with Timer() as t:
     print("test_document.a.do_not_exist:", test_document.a.do_not_exist)
 
 print("It took", t.time, "sec. to execute")
-# print(CustomDatabase(client, "test_database").__saki_test__.a.world)
+# print(CustomDatabase(client, "test_database").__yuno_test__.a.world)
 
-# test_collection = CustomDatabase(client, "test_database").__saki_test__
-# test_collection = database.__saki_test__
+# test_collection = CustomDatabase(client, "test_database").__yuno_test__
+# test_collection = database.__yuno_test__
 # print(test_collection.find())
 
 
 """
 with Timer() as timer:
-    class Account(SakiDocument):
+    class Account(YunoDocument):
         username: str = "default_username"
         password: str = "default_password"
         list_test: list[int] = []
         dict_test: dict
 
-    class TestCollection(SakiCollection):
+    class TestCollection(YunoCollection):
         a: Account
 
     test_collection = TestCollection(database, "account")

@@ -5,7 +5,7 @@ import threading
 import typing
 import subprocess
 
-from saki import utils
+from yuno import utils
 import psutil
 import yaml
 
@@ -45,7 +45,7 @@ SYSLOG = "syslog"
 
 class Configuration:
     """
-    This object represents part of a configuration file for MongoDB (and thus Saki)
+    This object represents part of a configuration file for MongoDB (and thus Yuno)
     """
 
     def __init__(self) -> None:
@@ -176,7 +176,7 @@ class LogConfig(Configuration):
     def __init__(
         self,
         verbosity: int = 1,
-        path: typing.Union[str, pathlib.Path] = "./saki/db.saki.log",
+        path: typing.Union[str, pathlib.Path] = "./yuno/db.yuno.log",
         append: bool = True,
         timezone: TimezoneType = Timezone.UTC,
         debug: bool = False
@@ -188,7 +188,7 @@ class LogConfig(Configuration):
         ----------
         verbosity: int -> 1 ~ 5, default=1
             The verbosity level of the MongoDB logging system
-        path: str, default="./saki/db.saki.log"
+        path: str, default="./yuno/db.yuno.log"
             The path of the MongoDB log file
             It can also be TERMINAL or SYSLOG
         append: bool, default=True
@@ -272,7 +272,7 @@ class MongoDB(Configuration):
         self,
         host: str = "127.0.0.1",
         port: int = 27017,
-        db_path: typing.Union[str, pathlib.Path] = "./saki/data",
+        db_path: typing.Union[str, pathlib.Path] = "./yuno/data",
         fork: bool = True,
         log_config: LogConfig = None,
         max_connections: int = 65536,
@@ -291,7 +291,7 @@ class MongoDB(Configuration):
             The host of the MongoDB server (net.bindIp)
         port: int, default=27017
             The port of the MongoDB server (net.port)
-        db_path: str, default="./saki/data"
+        db_path: str, default="./yuno/data"
             The path of the MongoDB database (storage.dbPath)
         fork: bool, default=True
             Whether to fork the MongoDB process or not (processManagement.fork)
@@ -444,7 +444,7 @@ class MongoDB(Configuration):
                                    message="MongoDB exited with a {} code before starting.".format(code), output=mongo_output))
             if not "child process started successfully, parent exiting" in mongo_output:
                 raise RuntimeError(_runtime_error_message(reason="No successfull confirmation",
-                                   message="Saki couldn't find the confirmation that MongoDB successfully launched.", output=mongo_output))
+                                   message="Yuno couldn't find the confirmation that MongoDB successfully launched.", output=mongo_output))
             for line in mongo_output.split("\n"):
                 try:
                     if "forked process" in line:
@@ -456,7 +456,7 @@ class MongoDB(Configuration):
                 except Exception:
                     continue  # to raise a NO PID FOUND exception if there is an error
             raise RuntimeError(_runtime_error_message(reason="No PID found",
-                               message="MongoDB may have been started but Saki could not find its PID.", output=mongo_output))
+                               message="MongoDB may have been started but Yuno could not find its PID.", output=mongo_output))
         # raise NotImplementedError("Synchronous MongoDB is not implemented yet.")
 
         def read_line():

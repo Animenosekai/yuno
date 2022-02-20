@@ -6,9 +6,9 @@ import re
 import typing
 
 import bson
-from saki import utils
+from yuno import utils
 
-# from saki.objects.dict import SakiDict
+# from yuno.objects.dict import YunoDict
 
 
 class LazyObject():
@@ -43,15 +43,15 @@ def get_annotations(o: object):
     return o.__annotations__ if hasattr(o, "__annotations__") else {}
 
 
-class SakiBSONEncoder():
+class YunoBSONEncoder():
     """
     The custom BSON encoder
     """
 
     def __init__(self) -> None:
         """To initialize the encoder."""
-        from saki import object  # noqa
-        self.object = object.SakiObject
+        from yuno import object  # noqa
+        self.object = object.YunoObject
 
     def encode_dict(self, o: dict[typing.Any, typing.Any]):
         """Correctly encoding an unpackable value"""
@@ -95,17 +95,17 @@ T = typing.TypeVar("T")
 IMMUTABLES = (bool, int, bson.Int64, float, str, bson.Binary, bson.ObjectId, bson.DBRef, bson.Code)
 
 
-class SakiTypeEncoder():
+class YunoTypeEncoder():
     """
     The custom type encoder
     """
 
     def __init__(self) -> None:
         """To initialize the encoder."""
-        from saki import objects
-        self.dict = objects.SakiDict
-        self.list = objects.SakiList
-        self.bson_encoder = SakiBSONEncoder()
+        from yuno import objects
+        self.dict = objects.YunoDict
+        self.list = objects.YunoList
+        self.bson_encoder = YunoBSONEncoder()
 
     def encode_dict(self, o: dict[typing.Any, typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
         """Correctly encoding an unpackable value"""
@@ -117,7 +117,7 @@ class SakiTypeEncoder():
         elif length <= 2:
             key__type, value__type = (str, types[0]) if length == 1 else (types[0], types[1])
             return CAST(_id=_id, collection=collection, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k), collection=collection, _id=_id) for k, v in dict(o).items()})
-            # return self.DICT(field=field, saki_document=document, values={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k)) for k, v in o.items()})
+            # return self.DICT(field=field, yuno_document=document, values={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k)) for k, v in o.items()})
         length -= 1
         for index, (key, value) in enumerate(o.items()):
             if length > index:
@@ -177,5 +177,5 @@ class SakiTypeEncoder():
         return _type(o)
 
 
-# BSONEncoder = SakiBSONEncoder()
-# TypeEncoder = SakiTypeEncoder()
+# BSONEncoder = YunoBSONEncoder()
+# TypeEncoder = YunoTypeEncoder()

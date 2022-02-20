@@ -1,12 +1,12 @@
-from saki.launcher import MongoDB, LogConfig
-from saki.client import SakiClient
+from yuno.launcher import MongoDB, LogConfig
+from yuno.client import YunoClient
 
 instance = MongoDB(db_path="test", log_config=LogConfig(path="test.log"), fork=False)
 
 print("Starting Mongo")
 instance.start()
 print("Mongo started")
-client = SakiClient(instance)
+client = YunoClient(instance)
 print(client)
 client.close()
 instance.kill()
@@ -16,7 +16,7 @@ instance = MongoDB(db_path="test", log_config=LogConfig(path="test.log"), fork=T
 print("Starting Mongo (fork)")
 instance.start()
 print("Mongo started (fork)")
-client = SakiClient(instance)
+client = YunoClient(instance)
 print(client)
 client.close()
 instance.kill()

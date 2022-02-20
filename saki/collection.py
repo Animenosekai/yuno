@@ -4,28 +4,28 @@ import typing
 import pymongo.database
 import pymongo.collection
 
-from saki import encoder, objects, database
-from saki.cursor import Cursor
-from saki.direction import IndexDirectionType, SortDirectionType
-from saki.watch import OperationType, Watch
+from yuno import encoder, objects, database
+from yuno.cursor import Cursor
+from yuno.direction import IndexDirectionType, SortDirectionType
+from yuno.watch import OperationType, Watch
 
-BSONEncoder = encoder.SakiBSONEncoder()
-TypeEncoder = encoder.SakiTypeEncoder()
+BSONEncoder = encoder.YunoBSONEncoder()
+TypeEncoder = encoder.YunoTypeEncoder()
 
 
 class DocumentsCursor(Cursor):
-    def next(self) -> "objects.SakiDict":
+    def next(self) -> "objects.YunoDict":
         return super().next()
 
-    def __iter__(self) -> typing.Iterator["objects.SakiDict"]:
+    def __iter__(self) -> typing.Iterator["objects.YunoDict"]:
         return super().__iter__()
 
 
-class SakiCollection(object):
+class YunoCollection(object):
     """
     An object that represents a collection in the database.
     """
-    __type__: "objects.SakiDict" = None
+    __type__: "objects.YunoDict" = None
     """The default document type"""
     __overwritten__ = {"__type__", "__overwritten__", "__name__", "__annotations__", "__database__", "__collection__", "__class__",  # we need to overwrite this to avoid getting the super class
                        "__init__", "count", "find", "index", "watch", "on", "_watch_loop", "__realtime__", "callbacks", "__delitem__", "__delattr__", "__setitem__", "__setattr__", "__getitem__", "__getattr__", "__repr__"}
@@ -34,7 +34,7 @@ class SakiCollection(object):
     """The name of the collection"""
     __annotations__: dict[str, type]
     """The documents annotations for the collection"""
-    __database__: "database.SakiDatabase"
+    __database__: "database.YunoDatabase"
     """The database this collection is in"""
     __collection__: pymongo.collection.Collection
     """The PyMongo collection object"""
@@ -44,19 +44,19 @@ class SakiCollection(object):
     __callbacks__: dict[OperationType, list[typing.Callable]] = {}
     """The callbacks registered for realtime updates"""
 
-    def __init__(self, database: "database.SakiDatabase", name: str = "__saki_test__") -> None:
+    def __init__(self, database: "database.YunoDatabase", name: str = "__yuno_test__") -> None:
         """
         Create a new collection
 
         Parameters
         ----------
-        database: SakiDatabase
+        database: YunoDatabase
             The database this collection is in
-        name: str, default="__saki_test__"
+        name: str, default="__yuno_test__"
             The name of the collection
         """
         if self.__type__ is None:
-            super().__setattr__("__type__", objects.SakiDict)
+            super().__setattr__("__type__", objects.YunoDict)
         super().__setattr__("__name__", str(name))
         super().__setattr__("__annotations__", self.__annotations__ if hasattr(self, "__annotations__") else {})
         super().__setattr__("__database__", database)
@@ -77,7 +77,7 @@ class SakiCollection(object):
         filter = filter if filter is not None else {}
         return self.__collection__.count_documents(filter, **kwargs)
 
-    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, sort: list[tuple[str, SortDirectionType]] = None, defered: bool = False, **kwargs) -> typing.Union[DocumentsCursor, list["objects.SakiDict"]]:
+    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, sort: list[tuple[str, SortDirectionType]] = None, defered: bool = False, **kwargs) -> typing.Union[DocumentsCursor, list["objects.YunoDict"]]:
         """
         Find documents in the collection
 
@@ -101,11 +101,11 @@ class SakiCollection(object):
             Keyword arguments to pass to the find method
             You can therefore use the function like so:
             >>> collection.find(name="John", age={"$gt": 18})
-            [SakiDict({"username": "Animenosekai", "rank": 1}), SakiDict({"username": "Anise", "rank": 2})]
+            [YunoDict({"username": "Animenosekai", "rank": 1}), YunoDict({"username": "Anise", "rank": 2})]
 
         Returns
         -------
-         list[SakiDict]
+         list[YunoDict]
             A list of documents
         """
         filter = filter if filter is not None else {}
@@ -125,7 +125,7 @@ class SakiCollection(object):
 
                 annotations = encoder.get_annotations(cast)
 
-                data = {k: encoder.SakiTypeEncoder().default(
+                data = {k: encoder.YunoTypeEncoder().default(
                     v,
                     _type=annotations.get(k, None),
                     field=k,
@@ -135,14 +135,14 @@ class SakiCollection(object):
                 return cast(_id=name, collection=self, field="", data=data)
             return DocumentsCursor(self.__collection__.find(filter=filter, projection=projection, limit=limit, sort=sort), verification=type_encode)
 
-        results: list[objects.SakiDict] = []
+        results: list[objects.YunoDict] = []
         for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit, sort=sort):
             name = doc.get("_id")
             cast = self.__annotations__.get(name, self.__type__)
 
             annotations = encoder.get_annotations(cast)
 
-            data = {k: encoder.SakiTypeEncoder().default(
+            data = {k: encoder.YunoTypeEncoder().default(
                 v,
                 _type=annotations.get(k, None),
                 field=k,
@@ -339,7 +339,7 @@ class SakiCollection(object):
             return super().__setattr__(name, value)
         self.__setitem__(name, value)
 
-    def __getitem__(self, name: str) -> "objects.SakiDict":
+    def __getitem__(self, name: str) -> "objects.YunoDict":
         """
         Gets a document from the collection.
 
@@ -352,7 +352,7 @@ class SakiCollection(object):
             raise KeyError("No document with name '{}' found".format(name))
         return data[0]
 
-    def __getattribute__(self, name: str) -> typing.Union["objects.SakiDict", typing.Any]:
+    def __getattribute__(self, name: str) -> typing.Union["objects.YunoDict", typing.Any]:
         """
         Gets a document from the collection.
 
@@ -366,7 +366,7 @@ class SakiCollection(object):
 
     def __repr__(self):
         """String representation of the collection."""
-        return "SakiCollection('{}')".format(self.__name__)
+        return "YunoCollection('{}')".format(self.__name__)
 
     def __contains__(self, _id: typing.Any) -> bool:
         """If 'obj' is in the current object. Example: if 'obj' in document: ..."""

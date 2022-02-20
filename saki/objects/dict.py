@@ -1,22 +1,22 @@
 import typing
 
-from saki import utils
-from saki.utils.annotations import Default
-from saki import encoder
+from yuno import utils
+from yuno.utils.annotations import Default
+from yuno import encoder
 
-from saki import object as _object
+from yuno import object as _object
 
 
-class SakiDict(_object.SakiObject, dict):
+class YunoDict(_object.YunoObject, dict):
     """
     An object behaving like a Python dict which is linked to the database.
     """
     __storage__: dict
-    __overwritten__ = _object.SakiObject.__overwritten__.union(
+    __overwritten__ = _object.YunoObject.__overwritten__.union(
         {"__fetch_from_db__", "__lazy_fetch__", "__post_verification__", "get", "clear", "pop", "popitem", "setdefault", "update", "to_dict"})
 
     def __lazy_fetch__(self, lazy_obj: encoder.LazyObject) -> typing.Any:
-        pipeline = [{"$match": {"_id": encoder.SakiBSONEncoder().default(self.__id__)}}]
+        pipeline = [{"$match": {"_id": encoder.YunoBSONEncoder().default(self.__id__)}}]
         if self.__field__:
             pipeline.append({"$replaceRoot": {"newRoot": "${}".format(self.__field__)}})
         pipeline.append({"$project": {"_id": False, lazy_obj.field: True}})
@@ -28,7 +28,7 @@ class SakiDict(_object.SakiObject, dict):
         return data[0][lazy_obj.field]
 
     def __fetch_from_db__(self) -> typing.Union[list, dict]:
-        pipeline = [{'$match': {'_id': encoder.SakiBSONEncoder().default(self.__id__)}}]
+        pipeline = [{'$match': {'_id': encoder.YunoBSONEncoder().default(self.__id__)}}]
         if self.__field__:
             pipeline.append({'$replaceRoot': {'newRoot': '${}'.format(self.__field__)}})
         if len(self.__lazy__) > 0:
@@ -38,7 +38,7 @@ class SakiDict(_object.SakiObject, dict):
             return {}
 
         annotations = self.__annotations__
-        data = {k: encoder.SakiTypeEncoder().default(
+        data = {k: encoder.YunoTypeEncoder().default(
             v,
             _type=annotations.get(k, None),
             field="{}.{}".format(self.__field__, k),
@@ -55,7 +55,7 @@ class SakiDict(_object.SakiObject, dict):
         defaults = set(dir(self)).difference(set(dir(self.__storage__)).union(self.__overwritten__).union({"__dict__", "__weakref__", "__module__"}))
         for k in defaults:
             if k not in self.__storage__:
-                self.__storage__[k] = encoder.SakiTypeEncoder().default(
+                self.__storage__[k] = encoder.YunoTypeEncoder().default(
                     self.__class__.__dict__[k],
                     _type=self.__annotations__.get(k, None),
                     field="{}.{}".format(self.__field__, k),
@@ -125,7 +125,7 @@ class SakiDict(_object.SakiObject, dict):
         value = copied.pop(key, default)
         if isinstance(value, Default):  # no value coming from the user should be a utils.annotations.Default instance
             raise KeyError(key)
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
+        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
         return value
 
@@ -147,7 +147,7 @@ class SakiDict(_object.SakiObject, dict):
         """
         copied = self.__storage__.copy()
         key, value = copied.popitem()
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
+        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
         return key, value
 
@@ -177,7 +177,7 @@ class SakiDict(_object.SakiObject, dict):
         """
         copied = self.__storage__.copy()
         value = copied.setdefault(key, default)
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
+        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
         return value
 
@@ -204,7 +204,7 @@ class SakiDict(_object.SakiObject, dict):
         """
         copied = self.__storage__.copy()
         copied.update(iterable or [], **kwargs)
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
+        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
 
     def to_dict(self, exclude: typing.Union[str, list[str]] = None, camelCase: bool = False) -> dict:
