@@ -416,8 +416,11 @@ class MongoDB(Configuration):
         Raises
         ------
         RuntimeError
-            If the process is failed to start.
+            If the process failed to start.
         """
+        if self.__process__ is not None:
+            raise RuntimeError(_runtime_error_message(reason="Already running",
+                               message="You are already running the current instance. Please kill it before starting a new one."))
         extra = extra or {}
         extra.update({"--" + k: v for k, v in kwargs.items()})
         added_args = []
@@ -430,7 +433,7 @@ class MongoDB(Configuration):
         if keep_alive:
             if fork:
                 utils.logging.log("The 'fork' option will be enabled because 'keep_alive' is enabled",
-                                        level=utils.logging.LogLevels.WARNING)
+                                  level=utils.logging.LogLevels.WARNING)
             fork = True
         try:
             process = subprocess.Popen([executable] + self.to_cli_args() + added_args, stdout=subprocess.PIPE)
@@ -486,11 +489,13 @@ class MongoDB(Configuration):
         Raises
         ------
         RuntimeError
-            If the process is not running.
+            If no process has been launched.
         """
         if self.__process__ is None:
             raise RuntimeError(_runtime_error_message(reason="No process", message="MongoDB is not running."))
-        self.__process__.kill()
+        if self.__process__.is_running():
+            self.__process__.kill()
+        self.__process__ = None
 
     # aliases
     stop = kill
@@ -499,5 +504,8 @@ class MongoDB(Configuration):
 
     def restart(self):
         """Restarts the MongoDB process."""
-        self.kill()
+        try:
+            self.kill()
+        except RuntimeError:
+            pass
         self.start()

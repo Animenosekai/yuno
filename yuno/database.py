@@ -260,8 +260,10 @@ class YunoDatabase(object):
                 kwargs = {}
                 if "event" in specs:
                     kwargs["event"] = event
-                if "collection" in specs:
-                    kwargs["collection"] = self
+                if "client" in specs:
+                    kwargs["client"] = self.__client__
+                if "database" in specs:
+                    kwargs["database"] = self
                 if blocking:
                     callback(**kwargs)
                 else:

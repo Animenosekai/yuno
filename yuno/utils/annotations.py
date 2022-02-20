@@ -1,3 +1,5 @@
+import typing
+
 
 class Default():
     """A default value for a function call"""

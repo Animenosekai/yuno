@@ -1,3 +1,4 @@
 - typing.Union, etc. handling in the type encoder
 - with (__enter__/__exit__) syntax handling
 - improve compatibility to Python>=3.6
+- custom exceptions

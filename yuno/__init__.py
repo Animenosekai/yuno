@@ -11,6 +11,7 @@ from .client import YunoClient
 from .collection import YunoCollection
 from .database import YunoDatabase
 from .direction import SortDirection, IndexDirection
+from .watch import Operation
 from .launcher import MongoDB, LogConfig
 
 from .objects import YunoDict, YunoList

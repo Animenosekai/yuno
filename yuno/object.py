@@ -241,6 +241,10 @@ class YunoObject(object):
                 kwargs = {}
                 if "event" in specs:
                     kwargs["event"] = event
+                if "client" in specs:
+                    kwargs["client"] = self.__collection__.__database__.__client__
+                if "database" in specs:
+                    kwargs["database"] = self.__collection__.__database__
                 if "collection" in specs:
                     kwargs["collection"] = self.__collection__
                 if "object" in specs:

@@ -214,6 +214,10 @@ class YunoCollection(object):
                 kwargs = {}
                 if "event" in specs:
                     kwargs["event"] = event
+                if "client" in specs:
+                    kwargs["client"] = self.__database__.__client__
+                if "database" in specs:
+                    kwargs["database"] = self.__database__
                 if "collection" in specs:
                     kwargs["collection"] = self
                 if blocking:

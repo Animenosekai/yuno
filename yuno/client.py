@@ -201,8 +201,8 @@ class YunoClient():
                 kwargs = {}
                 if "event" in specs:
                     kwargs["event"] = event
-                if "collection" in specs:
-                    kwargs["collection"] = self
+                if "client" in specs:
+                    kwargs["client"] = self
                 if blocking:
                     callback(**kwargs)
                 else:

@@ -77,7 +77,7 @@ def log(message: str = "Log", level: LogLevel = LogLevels.DEBUG, step: str = Non
     if not level.debug:
         formatting = {}
         if level._draw_time:
-            formatting["time"] = time.time()
+            formatting["time"] = int(time.time())
         if level._draw_step:
             formatting["step"] = step if step is not None else caller_name()
         if level._draw_name:
