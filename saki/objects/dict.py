@@ -1,7 +1,7 @@
 import typing
 
-import nasse.utils
-from nasse.utils.annotations import Default
+from saki import utils
+from saki.utils.annotations import Default
 from saki import encoder
 
 from saki import object as _object
@@ -123,7 +123,7 @@ class SakiDict(_object.SakiObject, dict):
         """
         copied = self.__storage__.copy()
         value = copied.pop(key, default)
-        if isinstance(value, Default):  # no value coming from the user should be a nasse.utils.annotations.Default instance
+        if isinstance(value, Default):  # no value coming from the user should be a utils.annotations.Default instance
             raise KeyError(key)
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.SakiBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
@@ -231,5 +231,5 @@ class SakiDict(_object.SakiObject, dict):
         for e in exclude:
             data.pop(e, None)
         if camelCase:
-            return {nasse.utils.sanitize.toCamelCase(k): v for k, v in data.items()}
+            return {utils.string.toCamelCase(k): v for k, v in data.items()}
         return data

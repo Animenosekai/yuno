@@ -6,7 +6,7 @@ import re
 import typing
 
 import bson
-from nasse import logging, utils
+from saki import utils
 
 # from saki.objects.dict import SakiDict
 
@@ -81,13 +81,12 @@ class SakiBSONEncoder():
             return o
         elif hasattr(o, "read") and hasattr(o, "tell") and hasattr(o, "seek"):
             return self.encode_file(o)
-        elif utils.annotations.is_unpackable(o):
+        elif utils.unpack.is_unpackable(o):
             return self.encode_dict(o)
         elif isinstance(o, typing.Iterable):
             return self.encode_iterable(o)
         else:
-            logging.log("Object of type <{_type}> will be converted to str while encoding to JSON".format(
-                _type=o.__class__.__name__))
+            utils.logging.log("Object of type <{_type}> will be converted to str while encoding to JSON".format(_type=o.__class__.__name__))
             return str(o)
 
 

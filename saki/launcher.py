@@ -5,7 +5,7 @@ import threading
 import typing
 import subprocess
 
-import nasse.utils
+from saki import utils
 import psutil
 import yaml
 
@@ -306,7 +306,7 @@ class MongoDB(Configuration):
         monitoring: bool, default=True
             Whether to enable the free MongoDB monitoring or not (cloud.monitoring.free.state)
         """
-        if nasse.utils.annotations.is_unpackable(log_config):
+        if utils.unpack.is_unpackable(log_config):
             log_config = LogConfig(**log_config)
         elif log_config is None:
             log_config = LogConfig()
@@ -359,7 +359,7 @@ class MongoDB(Configuration):
             "monitoring": self.monitoring
         }
         if camelCase:
-            return {nasse.utils.sanitize.toCamelCase(k): v for k, v in result.items()}
+            return {utils.string.toCamelCase(k): v for k, v in result.items()}
         return result
 
     def dumps(self, indent: int = 4) -> str:
@@ -429,8 +429,8 @@ class MongoDB(Configuration):
         fork = self.fork
         if keep_alive:
             if fork:
-                nasse.utils.logging.log("The 'fork' option will be enabled because 'keep_alive' is enabled",
-                                        level=nasse.utils.logging.LogLevels.WARNING)
+                utils.logging.log("The 'fork' option will be enabled because 'keep_alive' is enabled",
+                                        level=utils.logging.LogLevels.WARNING)
             fork = True
         try:
             process = subprocess.Popen([executable] + self.to_cli_args() + added_args, stdout=subprocess.PIPE)
