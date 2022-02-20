@@ -411,6 +411,178 @@ collection["special_document"] = {"_id": "special_document", "name": "Special do
 
 ### Using objects
 
+An "object" is what represents any object in a document, or even the document itself.
+
+To access objects from another object (the highest hierarchy parent object being the document), all you need to do is access its name as an attribute or an item:
+
+```python
+document.object_name
+# or
+document["object_name"]
+```
+
+In both case, this will return the same SakiObject object.
+
+The `document["object_name"]` syntax is especially useful if you use an object with its name being of a method overwritten by SakiObject (for example `watch`, `on`, `reload`, `delete`, etc.).
+
+You can find a list of overwritten attributes under the `__overwritten__` attribute.
+
+`SakiObject` is the class returned by `SakiCollection` when querying for one.
+
+```python
+# using the client variable defined before
+
+document = accounts.special_document
+# this is SakiObject object
+```
+
+You can define your own objects to type hint them (for the same reasons as before)
+
+```python
+from saki import SakiClient, SakiDatabase, SakiCollection, SakiDict
+
+
+
+class CustomObject(SakiDict):
+    hello: str = "world"
+    do_not_exist: str = "this does not exist"  # its default value if not found in db
+
+
+class CustomDocument(SakiDict):
+    __lazy__ = ["hello"]  # lazy loaded attribute
+
+    hello: str
+    world: str = "heyhey"
+    a: CustomObject  # nested object ^^
+
+
+class SpecialDocument(SakiDict):
+    __lazy__ = ["specialAttributes"]
+
+    specialAttributes: list[str]
+    version: str
+
+
+class CustomCollection(SakiCollection):
+    __type__ = CustomDocument  # the default type of document in the collection
+
+    special: SpecialDocument  # a special document type
+
+
+class CustomDatabase(SakiDatabase):
+    __saki_test__: CustomCollection
+
+
+class CustomClient(SakiClient):
+    test_database: CustomDatabase
+
+
+client = CustomClient("mongodb+srv://anise:password@sakitest.host.mongodb.net/production")
+test_database = client.test_database
+test_collection = test_database.__saki_test__
+special_doc = test_collection.special
+special_doc # this is a SpecialDocument object
+document = test_collection.any_document
+document # this is a CustomDocument object
+document.hello # this is a str object, but lazy loaded (not loaded until needed)
+document.a # this is CustomObject object
+document.a.hello # this is a str
+document.a.do_not_exist # this is a str (and if it's not found in the db, it will be the value given by default "this does not exist")
+```
+
+There is a special `__lazy__` attribute which is used to define attributes which won't be loaded until needed.
+
+This is especially useful for attributes which are expensive to load or not needed in normal circumstances.
+
+You can use type hints to define the schema of some attributes.
+
+Objects acts as regular python objects.
+
+For example, a SakiDict object can be used as a regular python dict:
+
+```python
+object # this is a SakiDict object
+object.get("key") # this is a str
+object.pop("key") # remove the key from the object
+object.items() # this is a list of tuples
+object.keys() # this is a list of str
+...
+for key, value in object.items():
+    print(key, value)
+del object["key"]
+```
+
+and a SakiList object can be used as a regular python list:
+
+```python
+object # this is a SakiList object
+object.append("value") # add a value to the list
+object.pop() # remove the last value from the list
+object.extend(["value1", "value2"]) # add multiple values to the list
+object.index("value") # return the index of the value in the list
+object.insert(0, "value") # insert a value at the beginning of the list
+object.remove("value") # remove the first value from the list
+object.reverse() # reverse the list
+object.sort() # sort the list
+...
+for value in object:
+    print(value)
+```
+
+Some methods don't come from regular Python data types, but are specific to SakiObjects:
+
+> Examples
+
+- `delete` deletes the current object from the database
+- `reload` reloads the current object from the database (replaces the current object with the one from the database)
+- `watch` returns a cursor to watch the database for changes and events.
+- `on` will register a callback function which will be called when the specified operation/event is performed on the object.
+
+Instead of the `reload` method, you also have a `__realtime__` attribute which you can set to `True` if you want the object to follow the updates on the database (you will have an object which is always up to date).
+
+```python
+document # this is a SakiObject (SakiDict, SakiList, etc.) object
+document.__realtime__ = True
+# this will make the object follow the updates on the database
+
+class CustomObject(SakiDict):
+    __realtime__ = True
+
+    hello: str = "world"
+
+class CustomCollection(SakiCollection):
+    __type__ = CustomObject
+
+# any object coming from the CustomCollection collection will be a CustomObject object and will be a "realtime" object, following the updates on the database
+```
+
+You can also use pythonic syntax to make some operations:
+
+- Deleting a document
+
+```python
+del object.key
+# or
+del object["key"]
+# will delete the "key" attribute from the object
+```
+
+- Set an attribute (create or replace)
+
+```python
+object.key = {"hello": "world"}
+# or
+object["key"] = {"hello": "world"}
+# will replace the "key" attribute with the one defined above
+```
+
+- Verify if the given document exists
+
+```python
+"key" in object
+# will return True if the attribute exists
+```
+
 ## How it works
 
 ## Deployment

@@ -328,7 +328,9 @@ class SakiCollection(object):
         #      {"_id": "special_document", "name": "Special Document"}
         """
         if name == "__name__":
-            return self.__init__(database=self.__database__, name=value)  # reinitializing the collection because it's a different one
+            if value != self.__name__:
+                self.__init__(database=self.__database__, name=value)  # reinitializing the collection because it's a different one
+            return
         if name == "__realtime__":
             if not self.__realtime__ and value:
                 super().__setattr__(name, value)
