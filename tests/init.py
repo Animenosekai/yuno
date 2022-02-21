@@ -57,8 +57,9 @@ def log(message):
 def close(mongo: yuno.MongoDB, client: yuno.YunoClient):
     log("Closing the client connection")
     client.close()
-    log("Stop MongoDB")
-    mongo.close()
+    if mongo.__process__ is not None:
+        log("Stopping MongoDB")
+        mongo.close()
 
 # INITIALIZATION FUNCTIONS
 
@@ -66,8 +67,11 @@ def close(mongo: yuno.MongoDB, client: yuno.YunoClient):
 def init_mongo():
     log("Initializing MongoDB")
     mongo = yuno.MongoDB()
-    log("Starting MongoDB")
-    mongo.start()
+    try:
+        log("Starting MongoDB")
+        mongo.start()
+    except RuntimeError:
+        log("MongoDB seems to be already running?")
     return mongo
 
 
@@ -120,8 +124,9 @@ def use_mongo(func):
         if "mongo" in avail:
             kwargs["mongo"] = mongo
         result = func(*args, **kwargs)
-        log("Stopping MongoDB")
-        mongo.close()
+        if mongo.__process__ is not None:
+            log("Stopping MongoDB")
+            mongo.close()
         return result
     return wrapper
 
