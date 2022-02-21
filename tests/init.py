@@ -75,7 +75,7 @@ else:
 
 
 def init_mongo():
-    log("Initializing MongoDB")
+    log("Initializing MongoDB with port: " + str(MONGO_PORT))
     mongo = yuno.MongoDB(port=MONGO_PORT, db_path="./test", log_config={"path": "./test.log"})
     try:
         log("Starting MongoDB")

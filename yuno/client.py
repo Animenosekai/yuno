@@ -96,6 +96,7 @@ class YunoClient():
             Options to pass to the PyMongo client.
         """
         if isinstance(host, MongoDB):
+            port = host.port
             host = host.host
         kwargs.update({
             "host": host,
