@@ -40,7 +40,10 @@ class IndexDirection:
     ASCENDING = pymongo.ASCENDING
     DESCENDING = pymongo.DESCENDING
     GEO2D = pymongo.GEO2D
-    GEOHAYSTACK = pymongo.GEOHAYSTACK
+    try:
+        GEOHAYSTACK = pymongo.GEOHAYSTACK
+    except AttributeError:  # raised in py3.8 according to CI
+        GEOHAYSTACK = "geoHaystack"
     GEOSPHERE = pymongo.GEOSPHERE
     HASHED = pymongo.HASHED
     TEXT = pymongo.TEXT
