@@ -11,16 +11,8 @@ on:
     workflow_dispatch:
 
 jobs:
-    run-mongo:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Starting MongoDB
-              uses: supercharge/mongodb-github-action@1.7.0
-              with:
-                  mongodb-replica-set: "yuno-test"
     test-py38:
         runs-on: ubuntu-latest
-        needs: run-mongo
         steps:
             - uses: actions/checkout@v2
             - name: Set up Python 3.8
@@ -33,7 +25,14 @@ jobs:
                   python -m pip install pytest
                   if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
                   python3 setup.py install
+            - name: Starting MongoDB
+              uses: supercharge/mongodb-github-action@1.7.0
+              with:
+                  mongodb-replica-set: "yuno-test"
+                  mongodb-port: 40000
             - name: Test with pytest
+              env:
+                  MONGO_PORT: 40000
               run: |
                   pytest -vv
 
@@ -57,11 +56,14 @@ jobs:
                   python -m pip install pytest
                   if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
                   python3 setup.py install
-            # - name: Starting MongoDB
-            #   uses: supercharge/mongodb-github-action@1.7.0
-            #   with:
-            #       mongodb-replica-set: "yuno-test"
+            - name: Starting MongoDB
+              uses: supercharge/mongodb-github-action@1.7.0
+              with:
+                  mongodb-replica-set: "yuno-test"
+                  mongodb-port: 40001
             - name: Test with pytest
+              env:
+                  MONGO_PORT: 40001
               run: |
                   pytest -vv
 
@@ -85,10 +87,13 @@ jobs:
                   python -m pip install pytest
                   if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
                   python3 setup.py install
-            # - name: Starting MongoDB
-            #   uses: supercharge/mongodb-github-action@1.7.0
-            #   with:
-            #       mongodb-replica-set: "yuno-test"
+            - name: Starting MongoDB
+              uses: supercharge/mongodb-github-action@1.7.0
+              with:
+                  mongodb-replica-set: "yuno-test"
+                  mongodb-port: 40002
             - name: Test with pytest
+              env:
+                  MONGO_PORT: 40002
               run: |
                   pytest -vv

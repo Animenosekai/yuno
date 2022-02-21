@@ -1,4 +1,5 @@
 import inspect
+import os
 import sys
 
 import yuno
@@ -69,7 +70,7 @@ def close(mongo: yuno.MongoDB, client: yuno.YunoClient):
 
 def init_mongo():
     log("Initializing MongoDB")
-    mongo = yuno.MongoDB()
+    mongo = yuno.MongoDB(port=int(os.environ.get("MONGO_PORT", 27017)))
     try:
         log("Starting MongoDB")
         mongo.start()
