@@ -129,7 +129,7 @@ class YunoDict(_object.YunoObject, dict):
         super().__setattr__("__storage__", copied)
         return value
 
-    def popitem(self) -> tuple[typing.Any, typing.Any]:
+    def popitem(self) -> typing.Tuple[typing.Any, typing.Any]:
         """
         If python>=3.7
             Removes the item that was last inserted into the dictionary.

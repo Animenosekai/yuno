@@ -133,7 +133,7 @@ class YunoDatabase(object):
         cast = self.__annotations__.get(name, yuno_collection.YunoCollection)
         return cast(self, name)
 
-    def list_collection_names(self, filter: dict[str, str] = None, **kwargs) -> list[str]:
+    def list_collection_names(self, filter: dict[str, str] = None, **kwargs) -> typing.List[str]:
         """
         List all of the collections in this database
 
@@ -152,7 +152,7 @@ class YunoDatabase(object):
         kwargs["filter"] = filter
         return self.__database__.list_collection_names(**kwargs)
 
-    def list_collections(self, filter: dict[str, str] = None, **kwargs) -> list["yuno_collection.YunoCollection"]:
+    def list_collections(self, filter: dict[str, str] = None, **kwargs) -> typing.List["yuno_collection.YunoCollection"]:
         """
         List all of the collections in this database
 

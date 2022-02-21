@@ -4,105 +4,105 @@
 name: Pytest
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
 
 jobs:
-  test-py36:
-    runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo
-        ports:
-          - 27017:27017
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.6
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.6"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          python3 setup.py install
-      - name: Test with pytest (expecting failure)
-        run: |
-          pytest -vv
-        continue-on-error: true
+    # test-py36:
+    #   runs-on: ubuntu-latest
+    #   services:
+    #     mongodb:
+    #       image: mongo
+    #       ports:
+    #         - 27017:27017
+    #   steps:
+    #     - uses: actions/checkout@v2
+    #     - name: Set up Python 3.6
+    #       uses: actions/setup-python@v2
+    #       with:
+    #         python-version: "3.6"
+    #     - name: Install dependencies
+    #       run: |
+    #         python -m pip install --upgrade pip
+    #         python -m pip install pytest
+    #         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    #         python3 setup.py install
+    #     - name: Test with pytest (expecting failure)
+    #       run: |
+    #         pytest -vv
+    #       continue-on-error: true
 
-  test-py38:
-    runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo
-        ports:
-          - 27017:27017
-    needs: test-py36
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.8"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          python3 setup.py install
-      - name: Test with pytest
-        run: |
-          pytest -vv
+    test-py38:
+        runs-on: ubuntu-latest
+        services:
+            mongodb:
+                image: mongo
+                ports:
+                    - 27017:27017
+        # needs: test-py36
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v2
+              with:
+                  python-version: "3.8"
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  python -m pip install pytest
+                  if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+                  python3 setup.py install
+            - name: Test with pytest
+              run: |
+                  pytest -vv
 
-  test-py39:
-    runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo
-        ports:
-          - 27017:27017
-    needs: test-py38
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          python3 setup.py install
-      - name: Test with pytest
-        run: |
-          pytest -vv
+    test-py39:
+        runs-on: ubuntu-latest
+        services:
+            mongodb:
+                image: mongo
+                ports:
+                    - 27017:27017
+        needs: test-py38
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.9
+              uses: actions/setup-python@v2
+              with:
+                  python-version: "3.9"
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  python -m pip install pytest
+                  if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+                  python3 setup.py install
+            - name: Test with pytest
+              run: |
+                  pytest -vv
 
-  test-py310:
-    runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo
-        ports:
-          - 27017:27017
-    needs: test-py39
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.10"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          python3 setup.py install
-      - name: Test with pytest
-        run: |
-          pytest -vv
+    test-py310:
+        runs-on: ubuntu-latest
+        services:
+            mongodb:
+                image: mongo
+                ports:
+                    - 27017:27017
+        needs: test-py39
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.10
+              uses: actions/setup-python@v2
+              with:
+                  python-version: "3.10"
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  python -m pip install pytest
+                  if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+                  python3 setup.py install
+            - name: Test with pytest
+              run: |
+                  pytest -vv

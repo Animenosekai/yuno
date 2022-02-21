@@ -54,7 +54,7 @@ class Configuration:
         """
         pass
 
-    def to_cli_args(self) -> list[str]:
+    def to_cli_args(self) -> typing.List[str]:
         """
         Returns a list of CLI arguments to pass to the MongoDB executable
 
@@ -210,7 +210,7 @@ class LogConfig(Configuration):
         if self.debug:
             self.verbosity = 5
 
-    def to_cli_args(self) -> list[str]:
+    def to_cli_args(self) -> typing.List[str]:
         results = [
             f"-{'v' * self.verbosity}",
             "--timeStampFormat", str(self.timezone)
@@ -346,7 +346,7 @@ class MongoDB(Configuration):
 
         return results
 
-    def to_dict(self, camelCase: bool = False) -> dict[str, typing.Any]:
+    def to_dict(self, camelCase: bool = False) -> typing.Dict[str, typing.Any]:
         result = {
             "host": self.host,
             "port": self.port,
