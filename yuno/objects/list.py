@@ -260,7 +260,7 @@ class YunoList(YunoObject, list):
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
 
-    def __iadd__(self, x: list[typing.Any]) -> typing.List[typing.Any]:
+    def __iadd__(self, x: typing.List[typing.Any]) -> typing.List[typing.Any]:
         """Extends the list by appending all the items in the given list. Example: ``document.fruits += ['Apple', 'Orange']``"""
         self.extend(x)
         return self

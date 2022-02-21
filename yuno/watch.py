@@ -92,8 +92,8 @@ class UpdateEvent(CRUDEvent):
                 self.new_size = data.get("newSize", None)
 
         def __init__(self, data: dict) -> None:
-            self.updated_fields: dict[str, typing.Any] = data.get("updatedFields", {})
-            self.removed_fields: list[str] = data.get("removedFields", [])
+            self.updated_fields: typing.Dict[str, typing.Any] = data.get("updatedFields", {})
+            self.removed_fields: typing.List[str] = data.get("removedFields", [])
             self.truncated_arrays = [self.Truncated(e) for e in data.get("truncatedArrays", [])]
 
     def __init__(self, data: dict) -> None:
@@ -146,7 +146,7 @@ class Watch():
     # pipeline=pipeline, full_document=None, resume_after=resume_state["token"], max_await_time_ms=None,
     #    batch_size=None, collation=None, start_at_operation_time=None, session=None, start_after=None
 
-    def __init__(self, watching_object: typing.Union[pymongo.collection.Collection, pymongo.database.Database, pymongo.mongo_client.MongoClient], pipeline: list[dict] = None, full_document: typing.Union[str, bool] = False, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> None:
+    def __init__(self, watching_object: typing.Union[pymongo.collection.Collection, pymongo.database.Database, pymongo.mongo_client.MongoClient], pipeline: typing.List[dict] = None, full_document: typing.Union[str, bool] = False, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> None:
         """
         Initializes the stream.
 

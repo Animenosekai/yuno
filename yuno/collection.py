@@ -32,7 +32,7 @@ class YunoCollection(object):
 
     __name__: str
     """The name of the collection"""
-    __annotations__: dict[str, type]
+    __annotations__: typing.Dict[str, type]
     """The documents annotations for the collection"""
     __database__: "database.YunoDatabase"
     """The database this collection is in"""
@@ -41,7 +41,7 @@ class YunoCollection(object):
 
     __realtime__: bool = False
     """Whether the collection updates in realtime or not"""
-    __callbacks__: dict[OperationType, list[typing.Callable]] = {}
+    __callbacks__: typing.Dict[OperationType, typing.List[typing.Callable]] = {}
     """The callbacks registered for realtime updates"""
 
     def __init__(self, database: "database.YunoDatabase", name: str = "__yuno_test__") -> None:
@@ -77,7 +77,7 @@ class YunoCollection(object):
         filter = filter if filter is not None else {}
         return self.__collection__.count_documents(filter, **kwargs)
 
-    def find(self, filter: dict = None, include: list[str] = None, exclude: list[str] = None, limit: int = 0, sort: list[tuple[str, SortDirectionType]] = None, defered: bool = False, **kwargs) -> typing.Union[DocumentsCursor, list["objects.YunoDict"]]:
+    def find(self, filter: dict = None, include: typing.List[str] = None, exclude: typing.List[str] = None, limit: int = 0, sort: typing.List[typing.Tuple[str, SortDirectionType]] = None, defered: bool = False, **kwargs) -> typing.Union[DocumentsCursor, typing.List["objects.YunoDict"]]:
         """
         Find documents in the collection
 
@@ -135,7 +135,7 @@ class YunoCollection(object):
                 return cast(_id=name, collection=self, field="", data=data)
             return DocumentsCursor(self.__collection__.find(filter=filter, projection=projection, limit=limit, sort=sort), verification=type_encode)
 
-        results: list[objects.YunoDict] = []
+        results: typing.List[objects.YunoDict] = []
         for doc in self.__collection__.find(filter=filter, projection=projection, limit=limit, sort=sort):
             name = doc.get("_id")
             cast = self.__annotations__.get(name, self.__type__)
@@ -154,7 +154,7 @@ class YunoCollection(object):
             results.append(cast(_id=name, collection=self, field="", data=data))
         return results
 
-    def index(self, keys: typing.Union[str, list[tuple[str, IndexDirectionType]]], name: str = None, unique: bool = True, background: bool = True, sparse: bool = True, **kwargs) -> None:
+    def index(self, keys: typing.Union[str, typing.List[typing.Tuple[str, IndexDirectionType]]], name: str = None, unique: bool = True, background: bool = True, sparse: bool = True, **kwargs) -> None:
         """
         Creates an index for this collection
 
@@ -227,7 +227,7 @@ class YunoCollection(object):
 
         watch.close()
 
-    def watch(self, operations: list[OperationType] = None, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
+    def watch(self, operations: typing.List[OperationType] = None, pipeline: typing.List[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
         """
         Returns an iterator (Watch) to watch the collection for changes.
 

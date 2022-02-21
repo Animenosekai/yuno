@@ -53,7 +53,7 @@ class YunoBSONEncoder():
         from yuno import object  # noqa
         self.object = object.YunoObject
 
-    def encode_dict(self, o: dict[typing.Any, typing.Any]):
+    def encode_dict(self, o: typing.Dict[typing.Any, typing.Any]):
         """Correctly encoding an unpackable value"""
         return {str(k): self.default(v) for k, v in o.items()}
 
@@ -107,7 +107,7 @@ class YunoTypeEncoder():
         self.list = objects.YunoList
         self.bson_encoder = YunoBSONEncoder()
 
-    def encode_dict(self, o: dict[typing.Any, typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
+    def encode_dict(self, o: typing.Dict[typing.Any, typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
         """Correctly encoding an unpackable value"""
         types = typing.get_args(_type)
         length = len(types)

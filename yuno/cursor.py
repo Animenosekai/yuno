@@ -104,7 +104,7 @@ class Cursor():
         self.cursor.skip(number)
         return self
 
-    def sort(self, field: typing.Union[str, list[tuple[str, SortDirectionType]]], direction: SortDirectionType = SortDirection.ASCENDING):
+    def sort(self, field: typing.Union[str, typing.List[typing.Tuple[str, SortDirectionType]]], direction: SortDirectionType = SortDirection.ASCENDING):
         """
         Sort the objects by the given field.
 

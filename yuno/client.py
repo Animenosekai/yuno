@@ -56,7 +56,7 @@ class YunoClient():
     """The host the client is connected to."""
     port: int
     """The port the client is connected to."""
-    __annotations__: dict[str, type]
+    __annotations__: typing.Dict[str, type]
     """
     A dictionary of the different database's types.
 
@@ -70,15 +70,15 @@ class YunoClient():
     """
     __client__: pymongo.MongoClient
     """The PyMongo client"""
-    __options__: dict[str, typing.Any] = {}
+    __options__: typing.Dict[str, typing.Any] = {}
     """Options defined on object instantiation"""
 
     __realtime__: bool = False
     """Wether to look for cluster events in realtime or not."""
-    __callbacks__: dict[OperationType, list[typing.Callable]] = {}
+    __callbacks__: typing.Dict[OperationType, typing.List[typing.Callable]] = {}
     """Callbacks on certain events"""
 
-    def __init__(self, host: typing.Union[str, list[str], MongoDB], port: int = None, tz_aware: bool = True, connect: bool = True, **kwargs) -> None:
+    def __init__(self, host: typing.Union[str, typing.List[str], MongoDB], port: int = None, tz_aware: bool = True, connect: bool = True, **kwargs) -> None:
         """
         Initialize the client.
 
@@ -210,7 +210,7 @@ class YunoClient():
 
         watch.close()
 
-    def watch(self, operations: list[OperationType] = None, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
+    def watch(self, operations: typing.List[OperationType] = None, pipeline: typing.List[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
         """
         Returns an iterator (Watch) to watch the cluster for changes.
 

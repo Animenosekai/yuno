@@ -31,7 +31,7 @@ class YunoDatabase(object):
 
     __realtime__: bool = False
     """Whether the database updates in realtime or not"""
-    __callbacks__: dict[OperationType, list[typing.Callable]] = {}
+    __callbacks__: typing.Dict[OperationType, typing.List[typing.Callable]] = {}
     """The callbacks registered for realtime updates"""
 
     def __init__(self, client: "client.YunoClient", name: str = "__yunot_test__") -> None:
@@ -51,7 +51,7 @@ class YunoDatabase(object):
         super().__setattr__("__client__", client)
         threading.Thread(target=self._watch_loop, daemon=True).start()
 
-    def aggregate(self, pipeline: list[dict], **kwargs) -> pymongo.cursor.Cursor:
+    def aggregate(self, pipeline: typing.List[dict], **kwargs) -> pymongo.cursor.Cursor:
         """
         Perform an aggregation on the database
 
@@ -133,7 +133,7 @@ class YunoDatabase(object):
         cast = self.__annotations__.get(name, yuno_collection.YunoCollection)
         return cast(self, name)
 
-    def list_collection_names(self, filter: dict[str, str] = None, **kwargs) -> typing.List[str]:
+    def list_collection_names(self, filter: typing.Dict[str, str] = None, **kwargs) -> typing.List[str]:
         """
         List all of the collections in this database
 
@@ -152,7 +152,7 @@ class YunoDatabase(object):
         kwargs["filter"] = filter
         return self.__database__.list_collection_names(**kwargs)
 
-    def list_collections(self, filter: dict[str, str] = None, **kwargs) -> typing.List["yuno_collection.YunoCollection"]:
+    def list_collections(self, filter: typing.Dict[str, str] = None, **kwargs) -> typing.List["yuno_collection.YunoCollection"]:
         """
         List all of the collections in this database
 
@@ -271,7 +271,7 @@ class YunoDatabase(object):
 
         watch.close()
 
-    def watch(self, operations: list[OperationType] = None, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
+    def watch(self, operations: typing.List[OperationType] = None, pipeline: typing.List[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
         """
         Returns an iterator (Watch) to watch the database for changes.
 

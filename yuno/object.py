@@ -23,7 +23,7 @@ class YunoObject(object):
                                  "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "delete", "reload", "watch", "on"}
     """All of the attributes defined by Yuno"""
 
-    __lazy__: list[str] = []
+    __lazy__: typing.List[str] = []
     """
     This is a list of attributes that are lazy loaded.
 
@@ -44,7 +44,7 @@ class YunoObject(object):
     """The field of the object in the document"""
     __realtime__: bool = False
     """Wether or not to enable real-time object updating"""
-    __callbacks__: dict[OperationType, list[typing.Callable]] = {}
+    __callbacks__: typing.Dict[OperationType, typing.List[typing.Callable]] = {}
     """Callbacks for real-time updating"""
     __collection__: "collection.YunoCollection"
     """The collection the document belongs to"""
@@ -256,7 +256,7 @@ class YunoObject(object):
 
         watch.close()
 
-    def watch(self, operations: list[OperationType] = None, pipeline: list[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
+    def watch(self, operations: typing.List[OperationType] = None, pipeline: typing.List[dict] = None, full_document: str = None, error_limit: int = 3, error_expiration: float = 60, **kwargs) -> Watch:
         """
         Returns an iterator (Watch) to watch the database for changes.
 

@@ -382,7 +382,7 @@ class MongoDB(Configuration):
             "{}monitoring:\n{}free:\n{}state: {}".format(spacing, spacing*2, spacing*3, "on" if self.monitoring else "off")
         ])
 
-    def loads(self, data: typing.Union[str, dict[str, typing.Any]], decode: bool = True) -> None:
+    def loads(self, data: typing.Union[str, typing.Dict[str, typing.Any]], decode: bool = True) -> None:
         if decode:
             data = yaml.safe_load(data)
         data = dict(data)

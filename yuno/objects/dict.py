@@ -207,7 +207,7 @@ class YunoDict(_object.YunoObject, dict):
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
 
-    def to_dict(self, exclude: typing.Union[str, list[str]] = None, camelCase: bool = False) -> dict:
+    def to_dict(self, exclude: typing.Union[str, typing.List[str]] = None, camelCase: bool = False) -> dict:
         """
         Returns the current object as a dictionary.
 
