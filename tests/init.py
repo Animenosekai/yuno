@@ -51,7 +51,10 @@ STEP = f"CI/Testing - v{sys.version_info.major}.{sys.version_info.minor}.{sys.ve
 
 
 def log(message):
-    yuno.utils.logging.log(message, yuno.utils.logging.LogLevels.INFO, step=STEP)
+    try:
+        yuno.utils.logging.log(message, yuno.utils.logging.LogLevels.INFO, step=STEP)
+    except Exception:
+        pass
 
 
 def close(mongo: yuno.MongoDB, client: yuno.YunoClient):

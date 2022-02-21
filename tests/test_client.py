@@ -13,8 +13,11 @@ def create_db(client: yuno.YunoClient):
 @init.use_client
 def test_attributes(mongo, client: yuno.YunoClient):
     init.log("client ~ Testing attributes")
-    assert client.address == (mongo.host, mongo.port)
-    assert client.host == mongo.host
+    if mongo.host in ("localhost", "127.0.0.1"):
+        assert client.address in [("localhost", mongo.port), ("127.0.0.1", mongo.port)]
+    else:
+        assert client.address == (mongo.host, mongo.port)
+        assert client.host == mongo.host
     assert client.port == mongo.port
     assert client.__realtime__ == False
     assert isinstance(client.__client__, pymongo.MongoClient)
