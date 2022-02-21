@@ -3,11 +3,43 @@ import yuno
 from . import init
 
 
-def verification_callback(obj):
-    init.log(f"cursor ~ Verifying object {obj}")
+@init.use_cursor
+def test_arguments(cursor: yuno.cursor.Cursor):
+    init.log("cursor ~ Testing arguments")
+    assert cursor.verification == init.verification_callback
+
+    collection = cursor.collection
+
+    cursor.disk_use = False
+    assert cursor.disk_use == False
+    cursor.disk_use = True
+    assert cursor.disk_use == True
 
 
-@init.use_collection
-def test_arguments(collection: yuno.YunoCollection):
-    collection.hello = {'_id': "hello", 'hello': "world"}
-    cursor = collection.__collection__.find({"_id": "hello"})
+@init.use_cursor
+def test_methods(cursor: yuno.cursor.Cursor):
+    init.log("cursor ~ Testing methods")
+    assert cursor.alive == True
+
+    cursor.explain()
+
+    assert cursor.hint("_id") == cursor
+    assert cursor.limit(10) == cursor
+    assert cursor.sort("_id") == cursor
+    assert cursor.skip(0) == cursor
+    assert cursor.next() is not None
+    assert cursor.try_next() is None
+    try:
+        cursor.next()
+    except Exception as err:
+        assert isinstance(err, StopIteration)
+
+    cursor.close()
+    assert cursor.alive == False
+
+
+@init.use_cursor
+def test_pythonic(cursor: yuno.cursor.Cursor):
+    init.log("cursor ~ Testing pythonic behavior")
+    for i in cursor:
+        init.log(f"cursor ~ Element from cursor: {i}")

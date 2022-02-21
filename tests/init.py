@@ -181,12 +181,15 @@ def use_collection(func):
         return result
     return wrapper
 
+def verification_callback(obj):
+        log(f"cursor ~ Verifying object {obj}")
+        return obj
 
 def use_cursor(func):
     def wrapper(*args, **kwargs):
         mongo, client, database, collection = init_collection()
         collection.hello = {'_id': "hello", 'hello': "world"}
-        cursor = yuno.cursor.Cursor(collection.__collection__.find({"_id": "hello"}))
+        cursor = yuno.cursor.Cursor(collection.__collection__.find({"_id": "hello"}), verification=verification_callback)
 
         avail = get_args(func)
         for arg, value in [("mongo", mongo), ("client", client), ("database", database), ("collection", collection), ("cursor", cursor)]:
