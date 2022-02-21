@@ -44,7 +44,7 @@ class Cursor():
         Try to get the next object without raising an exception.
         """
         try:
-            return self.cursor.next()
+            return self.cursor.next()  # should change it to have the same behavior as Watch's __next__
         except StopIteration:
             return None
 

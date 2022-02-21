@@ -182,6 +182,22 @@ def use_collection(func):
     return wrapper
 
 
+def use_cursor(func):
+    def wrapper(*args, **kwargs):
+        mongo, client, database, collection = init_collection()
+        collection.hello = {'_id': "hello", 'hello': "world"}
+        cursor = yuno.cursor.Cursor(collection.__collection__.find({"_id": "hello"}))
+
+        avail = get_args(func)
+        for arg, value in [("mongo", mongo), ("client", client), ("database", database), ("collection", collection), ("cursor", cursor)]:
+            if arg in avail:
+                kwargs[arg] = value
+        result = func(*args, **kwargs)
+        close(mongo, client)
+        return result
+    return wrapper
+
+
 def use_document(func):
     def wrapper(*args, **kwargs):
         mongo, client, database, collection, document = init_document()

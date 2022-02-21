@@ -36,6 +36,8 @@ def test_methods(client: yuno.YunoClient):
     client.drop_database("test_database")
     assert len(client.database_names()) == 3
 
+    assert isinstance(client.watch(), yuno.watch.Watch)
+
 
 @init.use_client
 def test_pythonic(client: yuno.YunoClient):
@@ -83,3 +85,4 @@ def test_realtime(client: yuno.YunoClient):
 
     assert len(registry) > 0
     init.log(f"client ~ Testing realtime ~ Realtime Registry: {registry}")
+    assert registry[0]["client"] == client
