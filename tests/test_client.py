@@ -21,7 +21,7 @@ def test_attributes(mongo, client: yuno.YunoClient):
     assert client.port == mongo.port
     assert client.__realtime__ == False
     assert isinstance(client.__client__, pymongo.MongoClient)
-    assert isinstance(client.server_info(), yuno.BuildInfo)
+    assert isinstance(client.server_info(), yuno.client.BuildInfo)
 
 
 @init.use_client

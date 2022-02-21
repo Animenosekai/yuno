@@ -103,11 +103,15 @@ class YunoClient():
             "tz_aware": tz_aware,
             "connect": connect
         })
-        super().__setattr__("__client__", pymongo.MongoClient(**kwargs))
-        address = self.__client__.address
+        client = pymongo.MongoClient(**kwargs)
+        super().__setattr__("__client__", client)
+        address = client.address
         if address is not None:
             super().__setattr__("host", address[0])
-            super().__setattr__("port", address[1])
+            if port is not None and address[1] is None:
+                super().__setattr__("port", port)
+            else:
+                super().__setattr__("port", address[1])
         else:
             super().__setattr__("host", host)
             super().__setattr__("port", port)
@@ -124,7 +128,7 @@ class YunoClient():
         tuple[str, int]
             A (host, port) tuple of the server the client is connected to.
         """
-        return self.__client__.address
+        return (self.host, self.port)
 
     def close(self):
         """
