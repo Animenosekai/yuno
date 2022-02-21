@@ -68,7 +68,7 @@ def test_realtime(client: yuno.YunoClient):
             "event": event,
             "client": client
         })
-        init.log(f"Received Event: {event}")
+        init.log(f"client ~ Testing realtime ~ Received Event: {event}")
 
     for operation in (yuno.Operation.DELETE, yuno.Operation.DROP, yuno.Operation.DROP_DATABASE, yuno.Operation.INSERT, yuno.Operation.INVALIDATE, yuno.Operation.RENAME, yuno.Operation.REPLACE, yuno.Operation.UPDATE):
         client.on(operation, callback)
@@ -82,4 +82,4 @@ def test_realtime(client: yuno.YunoClient):
         time.sleep(0.1)
 
     assert len(registry) > 0
-    init.log(f"client ~ Realtime Registry: {registry}")
+    init.log(f"client ~ Testing realtime ~ Realtime Registry: {registry}")

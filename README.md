@@ -33,7 +33,7 @@ Minimum required versions: 3.8
 Incompatible versions:     2
 ```
 
-According to Vermin (`--backport typing`), Python 3.8 is needed for the backport of typing but Python 3.6 should be the minimum with typing correctly backported (with `typing.Literal`)
+According to Vermin (`--backport typing`), Python 3.8 is needed for `typing.Literal`
 
 #### MongoDB
 

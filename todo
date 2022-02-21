@@ -1,4 +1,4 @@
 - typing.Union, etc. handling in the type encoder
 - with (__enter__/__exit__) syntax handling
-- improve compatibility to Python>=3.6
+- improve compatibility to Python>=3.6 (for example: `typing.Literal` only on py>=3.8)
 - custom exceptions
