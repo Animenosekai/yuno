@@ -19,7 +19,7 @@ class YunoObject(object):
     """
     An object behaving like a Python object which is linked to the database to update stuff on the fly.
     """
-    __overwritten__: set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__defaults__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
+    __overwritten__: typing.Set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__defaults__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
                                  "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "delete", "reload", "watch", "on"}
     """All of the attributes defined by Yuno"""
 
@@ -33,9 +33,9 @@ class YunoObject(object):
     """
     __storage__: typing.Union[dict, list]
     """Where the data is stored"""
-    __storage_attributes__: set[str] = set()
+    __storage_attributes__: typing.Set[str] = set()
     """Attributes for the data storage object"""
-    __defaults__: set[str] = set()
+    __defaults__: typing.Set[str] = set()
     """The default defaults values defined by the user"""
 
     __id__: typing.Union[bson.ObjectId, str, int, typing.Any]
