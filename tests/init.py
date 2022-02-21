@@ -1,5 +1,5 @@
 import inspect
-import os
+import pathlib
 import sys
 
 import yuno
@@ -65,12 +65,18 @@ def close(mongo: yuno.MongoDB, client: yuno.YunoClient):
         log("Stopping MongoDB")
         mongo.close()
 
+
 # INITIALIZATION FUNCTIONS
+f = pathlib.Path("./MONGO_PORT")
+if f.is_file():
+    MONGO_PORT = int(f.read_text().replace(" ", ""))
+else:
+    MONGO_PORT = 27017
 
 
 def init_mongo():
     log("Initializing MongoDB")
-    mongo = yuno.MongoDB(port=int(os.environ.get("MONGO_PORT", 27017)))
+    mongo = yuno.MongoDB(port=MONGO_PORT, db_path="./test", log_config={"path": "./test.log"})
     try:
         log("Starting MongoDB")
         mongo.start()

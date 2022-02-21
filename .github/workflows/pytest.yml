@@ -31,9 +31,8 @@ jobs:
                   mongodb-replica-set: "yuno-test"
                   mongodb-port: 40000
             - name: Test with pytest
-              env:
-                  MONGO_PORT: 40000
               run: |
+                  echo "40000" > "MONGO_PORT"
                   pytest -vv
 
     test-py39:
@@ -62,9 +61,8 @@ jobs:
                   mongodb-replica-set: "yuno-test"
                   mongodb-port: 40001
             - name: Test with pytest
-              env:
-                  MONGO_PORT: 40001
               run: |
+                  echo "40001" > "MONGO_PORT"
                   pytest -vv
 
     test-py310:
@@ -93,7 +91,6 @@ jobs:
                   mongodb-replica-set: "yuno-test"
                   mongodb-port: 40002
             - name: Test with pytest
-              env:
-                  MONGO_PORT: 40002
               run: |
+                  echo "40002" > "MONGO_PORT"
                   pytest -vv
