@@ -30,6 +30,12 @@ jobs:
     #         python -m pip install pytest
     #         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     #         python3 setup.py install
+
+    # - name: Starting MongoDB
+    #   uses: supercharge/mongodb-github-action@1.7.0
+    #   with:
+    #       mongodb-replica-set: "yuno-test"
+
     #     - name: Test with pytest (expecting failure)
     #       run: |
     #         pytest -vv
@@ -37,11 +43,6 @@ jobs:
 
     test-py38:
         runs-on: ubuntu-latest
-        services:
-            mongodb:
-                image: mongo
-                ports:
-                    - 27017:27017
         # needs: test-py36
         steps:
             - uses: actions/checkout@v2
@@ -55,6 +56,10 @@ jobs:
                   python -m pip install pytest
                   if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
                   python3 setup.py install
+            - name: Starting MongoDB
+              uses: supercharge/mongodb-github-action@1.7.0
+              with:
+                  mongodb-replica-set: "yuno-test"
             - name: Test with pytest
               run: |
                   pytest -vv
@@ -79,6 +84,10 @@ jobs:
                   python -m pip install pytest
                   if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
                   python3 setup.py install
+            - name: Starting MongoDB
+              uses: supercharge/mongodb-github-action@1.7.0
+              with:
+                  mongodb-replica-set: "yuno-test"
             - name: Test with pytest
               run: |
                   pytest -vv
@@ -103,6 +112,10 @@ jobs:
                   python -m pip install pytest
                   if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
                   python3 setup.py install
+            - name: Starting MongoDB
+              uses: supercharge/mongodb-github-action@1.7.0
+              with:
+                  mongodb-replica-set: "yuno-test"
             - name: Test with pytest
               run: |
                   pytest -vv
