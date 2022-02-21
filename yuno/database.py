@@ -13,9 +13,18 @@ ProfilingLevelType = typing.Literal[0, 1, 2]
 
 
 class ProfilingLevel:
-    OFF = pymongo.OFF
-    SLOW_ONLY = pymongo.SLOW_ONLY
-    ALL = pymongo.ALL
+    try:
+        OFF = pymongo.OFF
+    except AttributeError:  # according to CI
+        OFF = 0
+    try:
+        SLOW_ONLY = pymongo.SLOW_ONLY
+    except AttributeError:  # according to CI
+        SLOW_ONLY = 1
+    try:
+        ALL = pymongo.ALL
+    except AttributeError:  # according to CI
+        ALL = 2
 
 
 class YunoDatabase(object):
