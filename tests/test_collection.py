@@ -16,7 +16,7 @@ def test_arguments(database, collection: yuno.YunoCollection):
     assert isinstance(collection.__collection__, pymongo.collection.Collection)
     assert collection.__collection__.name == "test"
     assert collection.__realtime__ == False
-    assert collection.__type__ is None
+    assert collection.__type__ == yuno.YunoDict
 
 
 @init.use_collection

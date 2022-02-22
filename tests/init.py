@@ -100,7 +100,7 @@ def init_database():
     log("Initializing Database")
     database = yuno.YunoDatabase(client, "test")
     log("Cleaning up the database")
-    for collection in database.collection_names():
+    for collection in database.list_collection_names():
         log(f"Dropping collection: {collection}")
         del database[collection]
 

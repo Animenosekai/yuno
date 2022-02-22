@@ -23,7 +23,8 @@ class LazyObject():
         return "LazyObject({})".format(self.field)
 
 
-BSON_ENCODABLE = (bool, int, bson.Int64, float, str, datetime.datetime, bson.Regex, re.Pattern, bson.Binary, bson.ObjectId, bson.DBRef, bson.Code)
+BSON_ENCODABLE = (bool, int, bson.Int64, float, str, bytes, datetime.datetime, bson.Regex,
+                  re.Pattern, bson.Binary, bson.ObjectId, bson.DBRef, bson.Code)
 
 
 def get_annotations(o: object):

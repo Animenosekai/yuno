@@ -28,7 +28,7 @@ class YunoCollection(object):
     __type__: "objects.YunoDict" = None
     """The default document type"""
     __overwritten__ = {"__type__", "__overwritten__", "__name__", "__annotations__", "__database__", "__collection__", "__class__",  # we need to overwrite this to avoid getting the super class
-                       "__init__", "count", "find", "index", "watch", "on", "_watch_loop", "__realtime__", "callbacks", "__delitem__", "__delattr__", "__setitem__", "__setattr__", "__getitem__", "__getattr__", "__repr__"}
+                       "__init__", "count", "find", "index", "aggregate", "update", "watch", "on", "_watch_loop", "__realtime__", "callbacks", "__delitem__", "__delattr__", "__setitem__", "__setattr__", "__getitem__", "__getattr__", "__repr__"}
 
     __name__: str
     """The name of the collection"""
