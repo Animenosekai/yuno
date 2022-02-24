@@ -14,14 +14,13 @@ def test_arguments(cursor: yuno.cursor.Cursor):
 
 
 @init.use_cursor
-def test_methods(collection: yuno.YunoCollection, cursor: yuno.cursor.Cursor):
+def test_methods(cursor: yuno.cursor.Cursor):
     init.log("cursor ~ Testing methods")
     assert cursor.alive == True
 
     cursor.explain()
 
-    collection.index("hello")
-    assert cursor.hint("hello") == cursor
+    # TODO: test cursor.hint
     assert cursor.limit(10) == cursor
     assert cursor.sort("_id") == cursor
     assert cursor.skip(0) == cursor
