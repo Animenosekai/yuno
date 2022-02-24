@@ -20,8 +20,8 @@ def test_methods(collection: yuno.YunoCollection, cursor: yuno.cursor.Cursor):
 
     cursor.explain()
 
-    collection.index("_id", background=False)
-    assert cursor.hint("_id") == cursor
+    collection.index("hello")
+    assert cursor.hint("hello") == cursor
     assert cursor.limit(10) == cursor
     assert cursor.sort("_id") == cursor
     assert cursor.skip(0) == cursor
