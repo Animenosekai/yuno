@@ -2,6 +2,14 @@ import inspect
 import time
 
 
+try:
+    from nasse.config import Mode
+    DEBUG_MODE = Mode.DEBUG
+except ImportError:
+    import sys
+    DEBUG_MODE = "-d" in sys.argv or "--debug" in sys.argv
+
+
 class Colors:
     normal = '\033[0m'
     grey = '\033[90m'
@@ -14,6 +22,9 @@ class Colors:
     magenta = '\033[95m'
 
     _colors = {normal, grey, red, green, blue, cyan, white, yellow, magenta}
+
+    def __getitem__(self, item) -> str:
+        return self.__getattribute__(item)
 
 
 class LogLevel():
@@ -74,15 +85,28 @@ def caller_name(skip: int = 2):
 
 
 def log(message: str = "Log", level: LogLevel = LogLevels.DEBUG, step: str = None):
-    if not level.debug:
-        formatting = {}
-        if level._draw_time:
-            formatting["time"] = int(time.time())
-        if level._draw_step:
-            formatting["step"] = step if step is not None else caller_name()
-        if level._draw_name:
-            formatting["name"] = "Yuno"
-        if level._draw_message:
-            formatting["message"] = message
+    """
+    Log a message to the console.
 
-        print(level.template.format(**formatting))
+    Parameters
+    ----------
+    message : str
+        The message to log.
+    level : LogLevel
+        The level of the message.
+    step : str
+        The step in the code.
+    """
+    if level.debug and not DEBUG_MODE:
+        return
+    formatting = {}
+    if level._draw_time:
+        formatting["time"] = int(time.time())
+    if level._draw_step:
+        formatting["step"] = step if step is not None else caller_name()
+    if level._draw_name:
+        formatting["name"] = "Yuno"
+    if level._draw_message:
+        formatting["message"] = message
+
+    print(level.template.format(**formatting))

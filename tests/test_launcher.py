@@ -1,7 +1,8 @@
 import pathlib
-from . import init
 
 import yuno
+
+from . import init
 
 
 def test_attributes():

@@ -1,8 +1,9 @@
 import pathlib
-import yuno
-from . import init
-
 import uuid
+
+import yuno
+
+from . import init
 
 
 class Test:

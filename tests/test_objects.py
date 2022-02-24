@@ -1,6 +1,6 @@
-from . import init
-
 import yuno
+
+from . import init
 
 
 @init.use_document
@@ -80,3 +80,8 @@ def test_list(document: TestDocument):
         document_list.clear()
         document_list.extend(init.TEST_LIST)
         native = document_list.__storage__.copy()
+
+
+# TODO: test global methods for YunoObject (reload, delete, etc.)
+# TODO: test realtime
+# TODO: test pythonic behavior?
