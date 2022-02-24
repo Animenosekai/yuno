@@ -23,8 +23,8 @@ def test_type():
     assert isinstance(encoder.default("hello", _type=Test), Test)
     assert encoder.default("hello", _type=Test).value == "hello"
     assert isinstance(encoder.default({"hello": "world"}, _type=yuno.YunoDict), yuno.YunoDict)
-    assert all((isinstance(key, str) for key in encoder.default(["hello", 1, None, True], _type=List[str])))
-    assert all(isinstance(val, str) for val in encoder.default({"hello": "world", "number": 1}, _type=Dict[str, str]).values())
+    assert all((isinstance(key, str) for key in encoder.default(["hello", 1, None, True], _type=list)))
+    assert all(isinstance(val, str) for val in encoder.default({"hello": "world", "number": 1}, _type=dict).values())
 
 
 def test_bson():

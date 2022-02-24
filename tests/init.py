@@ -181,9 +181,11 @@ def use_collection(func):
         return result
     return wrapper
 
+
 def verification_callback(obj):
-        log(f"cursor ~ Verifying object {obj}")
-        return obj
+    log(f"cursor ~ Verifying object {obj}")
+    return obj
+
 
 def use_cursor(func):
     def wrapper(*args, **kwargs):
