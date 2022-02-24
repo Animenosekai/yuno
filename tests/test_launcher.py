@@ -37,10 +37,16 @@ def test_methods():
         assert arg in args
 
     assert isinstance(mongo.dumps(), str)
-    assert mongo.to_dict() == {'host': '127.0.0.1', 'port': 27017, 'db_path': '/Users/animenosekai/Documents/Coding/Projects/yuno/yuno/data', 'fork': True, 'log_config': {'verbosity': 1,
-                                                                                                                                                                           'path': '/Users/animenosekai/Documents/Coding/Projects/yuno/yuno/db.yuno.log', 'append': True, 'timezone': 'iso8601-utc', 'debug': False}, 'max_connections': 65536, 'json_validation': True, 'ipv6': True, 'monitoring': True}
-    assert mongo.to_dict(camelCase=True) == {'host': '127.0.0.1', 'port': 27017, 'dbPath': '/Users/animenosekai/Documents/Coding/Projects/yuno/yuno/data', 'fork': True, 'logConfig': {
-        'verbosity': 1, 'path': '/Users/animenosekai/Documents/Coding/Projects/yuno/yuno/db.yuno.log', 'append': True, 'timezone': 'iso8601-utc', 'debug': False}, 'maxConnections': 65536, 'jsonValidation': True, 'ipv6': True, 'monitoring': True}
+    data = mongo.to_dict()
+    data.pop("db_path", None)
+    data["log_config"].pop("path", None)
+    assert data == {'host': '127.0.0.1', 'port': 27017, 'fork': True, 'log_config': {'verbosity': 1, 'append': True,
+                                                                                     'timezone': 'iso8601-utc', 'debug': False}, 'max_connections': 65536, 'json_validation': True, 'ipv6': True, 'monitoring': True}
+    data = mongo.to_dict(camelCase=True)
+    data.pop("dbPath", None)
+    data["logConfig"].pop("path", None)
+    assert data == {'host': '127.0.0.1', 'port': 27017, 'fork': True, 'logConfig': {'verbosity': 1, 'append': True,
+                                                                                    'timezone': 'iso8601-utc', 'debug': False}, 'maxConnections': 65536, 'jsonValidation': True, 'ipv6': True, 'monitoring': True}
 
     mongo.dump("test.conf")
     mongo.dump(pathlib.Path("./test.conf"))

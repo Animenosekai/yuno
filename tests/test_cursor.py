@@ -7,9 +7,6 @@ from . import init
 def test_arguments(cursor: yuno.cursor.Cursor):
     init.log("cursor ~ Testing arguments")
     assert cursor.verification == init.verification_callback
-
-    collection = cursor.collection
-
     cursor.disk_use = False
     assert cursor.disk_use == False
     cursor.disk_use = True

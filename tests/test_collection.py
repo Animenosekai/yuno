@@ -36,8 +36,8 @@ def test_methods(collection: yuno.YunoCollection):
     assert "_id" in k and "hello" in k
     v = list(collection.hello.values())
     assert "hello" in v and "world" in v
-    assert len(collection.aggregate([{"$match": {"hello": "world"}}])) == 1
-    assert len(collection.aggregate([{"$match": {"do_not_exist": "hey"}}])) == 0
+    assert len(list(collection.aggregate([{"$match": {"hello": "world"}}]))) == 1
+    assert len(list(collection.aggregate([{"$match": {"do_not_exist": "hey"}}]))) == 0
     collection.index("hello")
     assert isinstance(collection.watch(), yuno.watch.Watch)
 
@@ -52,7 +52,7 @@ def test_pythonic(collection: yuno.YunoCollection):
     assert collection.special_document.name == collection["special_document"].name
     assert collection.special_document.name == collection.special_document["name"]
     assert collection.special_document.name == collection["special_document"]["name"]
-    del collection.special_docuemnt
+    del collection.special_document
 
     assert collection.count() == 0
     collection["special_document"] = {"_id": "special_document", "name": "Special document"}

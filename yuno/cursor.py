@@ -58,11 +58,11 @@ class Cursor():
         """String representation of the cursor."""
         return "{}(id={})".format(self.__class__.__name__, self.id)
 
-    @property
-    def collection(self) -> "collection.YunoCollection":
-        """Collection the cursor is iterating over."""
-        _collection = self.cursor.collection
-        return collection.YunoCollection(_collection.database, _collection.name)
+    # @property
+    # def collection(self) -> "collection.YunoCollection":
+    #     """Collection the cursor is iterating over."""
+    #     _collection = self.cursor.collection
+    #     return collection.YunoCollection(_collection.database, _collection.name)
 
     def close(self) -> None:
         """Closes the cursor."""
@@ -149,7 +149,7 @@ class Cursor():
     @property
     def alive(self):
         """Does this cursor have the potential to return more data?"""
-        return self._cursor.alive
+        return self.cursor.alive
 
     def __enter__(self):
         """
