@@ -20,7 +20,7 @@ class YunoObject(object):
     An object behaving like a Python object which is linked to the database to update stuff on the fly.
     """
     __overwritten__: typing.Set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__defaults__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
-                                 "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "delete", "reload", "watch", "on"}
+                                        "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "__eq__", "__ne__", "delete", "reload", "watch", "on"}
     """All of the attributes defined by Yuno"""
 
     __lazy__: typing.List[str] = []
@@ -146,6 +146,7 @@ class YunoObject(object):
                 super().__setattr__(name, value)
                 threading.Thread(target=self._watch_loop, daemon=True).start()
                 return
+        if name in self.__overwritten__:
             return super().__setattr__(name, value)
         self.__setitem__(name, value)
 
@@ -166,6 +167,12 @@ class YunoObject(object):
     def __contains__(self, obj: typing.Any) -> bool:
         """If 'obj' is in the current object. Example: if 'obj' in document: ..."""
         return obj in self.__storage__
+
+    def __eq__(self, obj: object) -> bool:
+        return encoder.YunoBSONEncoder().default(self) == encoder.YunoBSONEncoder().default(obj)
+
+    def __ne__(self, obj: object) -> bool:
+        return encoder.YunoBSONEncoder().default(self) != encoder.YunoBSONEncoder().default(obj)
 
     def delete(self) -> None:
         """

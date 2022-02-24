@@ -78,7 +78,7 @@ class YunoBSONEncoder():
         if isinstance(o, self.object):
             o = o.__storage__
         # https://pymongo.readthedocs.io/en/stable/api/bson/index.html
-        elif isinstance(o, BSON_ENCODABLE):
+        if isinstance(o, BSON_ENCODABLE):
             return o
         elif hasattr(o, "read") and hasattr(o, "tell") and hasattr(o, "seek"):
             return self.encode_file(o)

@@ -31,8 +31,9 @@ def test_methods():
     DEFAULT = ['--bind_ip', '127.0.0.1', '--port', '27017', '--maxConns', '65536', '--enableFreeMonitoring',
                'on', '--fork', '--ipv6', '-v', '--timeStampFormat', 'iso8601-utc', '--logappend']
 
-    for arg in mongo.to_cli_args():
-        assert arg in DEFAULT
+    args = mongo.to_cli_args()
+    for arg in DEFAULT:
+        assert arg in args
 
     assert isinstance(mongo.dumps(), str)
     assert mongo.to_dict() == {'host': '127.0.0.1', 'port': 27017, 'db_path': '/Users/animenosekai/Documents/Coding/Projects/yuno/yuno/data', 'fork': True, 'log_config': {'verbosity': 1,

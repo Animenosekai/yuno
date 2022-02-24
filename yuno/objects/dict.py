@@ -101,7 +101,10 @@ class YunoDict(_object.YunoObject, dict):
         #    Updated Document
         #      {'name': {}}
         """
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: {}}})
+        if self.__field__ == "":
+            self.__collection__.__collection__.delete_one({"_id": self.__id__})
+        else:
+            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: {}}})
         self.__storage__.clear()
 
     def pop(self, key: typing.Any, default: typing.Any = Default(None)) -> typing.Any:
@@ -125,7 +128,10 @@ class YunoDict(_object.YunoObject, dict):
         value = copied.pop(key, default)
         if isinstance(value, Default):  # no value coming from the user should be a utils.annotations.Default instance
             raise KeyError(key)
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
+        if self.__field__ == "":
+            self.__collection__.__collection__.replace_one({"_id": self.__id__}, encoder.YunoBSONEncoder().default(copied))
+        else:
+            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
         return value
 
@@ -147,7 +153,10 @@ class YunoDict(_object.YunoObject, dict):
         """
         copied = self.__storage__.copy()
         key, value = copied.popitem()
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
+        if self.__field__ == "":
+            self.__collection__.__collection__.replace_one({"_id": self.__id__}, encoder.YunoBSONEncoder().default(copied), upsert=True)
+        else:
+            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
         return key, value
 
@@ -177,7 +186,10 @@ class YunoDict(_object.YunoObject, dict):
         """
         copied = self.__storage__.copy()
         value = copied.setdefault(key, default)
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
+        if self.__field__ == "":
+            self.__collection__.__collection__.replace_one({"_id": self.__id__}, encoder.YunoBSONEncoder().default(copied))
+        else:
+            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
         return value
 
@@ -204,7 +216,10 @@ class YunoDict(_object.YunoObject, dict):
         """
         copied = self.__storage__.copy()
         copied.update(iterable or [], **kwargs)
-        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
+        if self.__field__ == "":
+            self.__collection__.__collection__.replace_one({"_id": self.__id__}, encoder.YunoBSONEncoder().default(copied), upsert=True)
+        else:
+            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: encoder.YunoBSONEncoder().default(copied)}})
         super().__setattr__("__storage__", copied)
 
     def to_dict(self, exclude: typing.Union[str, typing.List[str]] = None, camelCase: bool = False) -> dict:

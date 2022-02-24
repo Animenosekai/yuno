@@ -33,7 +33,7 @@ TEST_LIST = [
     True
 ]
 
-TEST_DOCUMENT = {"_id": "test", "hello": "world", "test_list": TEST_LIST, "test_dict": TEST_OBJECT,
+TEST_DOCUMENT = {"_id": "test_document", "hello": "world", "test_list": TEST_LIST, "test_dict": TEST_OBJECT,
                  "boolean": True, "float": 1.1, "int": 1, "null": None, "string": "test"}
 
 
@@ -122,7 +122,7 @@ def init_document():
     mongo, client, database, collection = init_collection()
     log("Initializing Document")
     collection.test_document = TEST_DOCUMENT
-    return mongo, client, database, collection, collection.test
+    return mongo, client, database, collection, collection.test_document
 
 # DECORATORS
 

@@ -108,6 +108,33 @@ class YunoList(YunoObject, list):
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$push": {self.__field__: encoder.YunoBSONEncoder().default(o)}})
         self.__storage__.append(o)
 
+    def insert(self, index: int, o: typing.Any) -> None:
+        """
+        Inserts the object before the specified index.
+
+        Parameters
+        ----------
+        index : int
+            The index to insert the object before.
+        o : typing.Any
+            The object to insert.
+
+        Example
+        --------
+        >>> document.fruits.insert(1, 'Strawberry')
+        #    Initial Document
+        #      {'fruits': ["Apple", "Orange"]}
+        #    Updated Document
+        #      {'fruits': ["Apple", "Strawberry", "Orange"]}
+        """
+        copied = self.__storage__.copy()
+        copied.insert(index, o)
+        bson = encoder.YunoBSONEncoder().default(copied)
+        copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, i),
+                                                    collection=self.__collection__, _id=self.__id__) for i, element in enumerate(bson)]
+        self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: bson}})
+        self.__storage__ = copied
+
     def clear(self) -> None:
         """
         Removes all elements from the list.
@@ -179,7 +206,7 @@ class YunoList(YunoObject, list):
 
         Parameters
         ----------
-        value : typing.Any
+        value : Any
             The object to remove from the list.
 
         Example
