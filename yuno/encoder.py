@@ -1,6 +1,7 @@
 
 
 import datetime
+from inspect import isclass
 import io
 import re
 import typing
@@ -112,7 +113,15 @@ class YunoTypeEncoder():
         """Correctly encoding an unpackable value"""
         types = typing.get_args(_type)
         length = len(types)
-        CAST = self.dict if not issubclass(_type, self.dict) else _type
+        origin = typing.get_origin(_type)
+        if origin == typing.Dict:
+            origin = dict
+
+        try:
+            CAST = self.dict if not issubclass(origin, self.dict) else _type
+        except Exception:
+            CAST = self.dict
+
         if length <= 0:
             return CAST(_id=_id, collection=collection, field=field, data={key: self.default(o=val, _type=get_annotations(CAST).get(key, None), field="{}.{}".format(field, key), collection=collection, _id=_id) for key, val in dict(o).items()})
         elif length <= 2:
@@ -131,7 +140,20 @@ class YunoTypeEncoder():
         """Encoding an iterable value"""
         _types = typing.get_args(_type)
         length = len(_types)
-        CAST = self.list if not issubclass(_type, self.list) else _type
+
+        origin = typing.get_origin(_type)
+        if origin == typing.List:
+            origin = list
+        elif origin == typing.Tuple:
+            origin = tuple
+        elif origin == typing.Set:
+            origin = set
+
+        try:
+            CAST = self.list if not issubclass(origin, self.list) else _type
+        except Exception:
+            CAST = self.list
+
         if length <= 0:
             return CAST(_id=_id, collection=collection, field=field, data=[self.default(o=val, _type=get_annotations(CAST).get(index, None), field="{}.{}".format(field, index), collection=collection, _id=_id) for index, val in enumerate(i)])
         length -= 1
@@ -174,6 +196,9 @@ class YunoTypeEncoder():
             origin = tuple
         elif origin == typing.Set:
             origin = set
+
+        if not isclass(origin):
+            origin = type(origin)
 
         if origin is not None:
             if issubclass(origin, dict) or isinstance(origin, dict):
