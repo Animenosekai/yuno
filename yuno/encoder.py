@@ -156,10 +156,25 @@ class YunoTypeEncoder():
         if isinstance(_type, IMMUTABLES):
             _type = _type.__class__
 
-        if issubclass(_type, IMMUTABLES):
-            return _type(o)
+        try:
+            if issubclass(_type, IMMUTABLES):
+                return _type(o)
+        except Exception:
+            pass
 
         origin = typing.get_origin(_type)
+
+        # TODO: handle when origin == typing.Union
+
+        if origin == typing.Dict:
+            origin = dict
+        elif origin == typing.List:
+            origin = list
+        elif origin == typing.Tuple:
+            origin = tuple
+        elif origin == typing.Set:
+            origin = set
+
         if origin is not None:
             if issubclass(origin, dict) or isinstance(origin, dict):
                 return self.encode_dict(o=o, _type=_type, field=field, collection=collection, _id=_id)
