@@ -113,12 +113,9 @@ class YunoTypeEncoder():
         """Correctly encoding an unpackable value"""
         types = typing.get_args(_type)
         length = len(types)
-        origin = typing.get_origin(_type)
-        if origin == typing.Dict:
-            origin = dict
 
         try:
-            CAST = self.dict if not issubclass(origin, self.dict) else _type
+            CAST = self.dict if not issubclass(_type, self.dict) else _type
         except Exception:
             CAST = self.dict
 
@@ -141,16 +138,8 @@ class YunoTypeEncoder():
         _types = typing.get_args(_type)
         length = len(_types)
 
-        origin = typing.get_origin(_type)
-        if origin == typing.List:
-            origin = list
-        elif origin == typing.Tuple:
-            origin = tuple
-        elif origin == typing.Set:
-            origin = set
-
         try:
-            CAST = self.list if not issubclass(origin, self.list) else _type
+            CAST = self.list if not issubclass(_type, self.list) else _type
         except Exception:
             CAST = self.list
 
@@ -196,9 +185,6 @@ class YunoTypeEncoder():
             origin = tuple
         elif origin == typing.Set:
             origin = set
-
-        if not isclass(origin):
-            origin = type(origin)
 
         if origin is not None:
             if issubclass(origin, dict) or isinstance(origin, dict):

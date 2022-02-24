@@ -1,4 +1,5 @@
 import pathlib
+import sys
 import uuid
 from typing import List, Dict
 
@@ -23,8 +24,10 @@ def test_type():
     assert isinstance(encoder.default("hello", _type=Test), Test)
     assert encoder.default("hello", _type=Test).value == "hello"
     assert isinstance(encoder.default({"hello": "world"}, _type=yuno.YunoDict), yuno.YunoDict)
-    assert all((isinstance(key, str) for key in encoder.default(["hello", 1, None, True], _type=List[str])))
-    assert all(isinstance(val, str) for val in encoder.default({"hello": "world", "number": 1}, _type=Dict[str, str]).values())
+
+    if sys.version_info.minor > 8:  # not available for py3.8
+        assert all((isinstance(key, str) for key in encoder.default(["hello", 1, None, True], _type=List[str])))
+        assert all(isinstance(val, str) for val in encoder.default({"hello": "world", "number": 1}, _type=Dict[str, str]).values())
 
 
 def test_bson():
