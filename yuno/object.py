@@ -1,3 +1,9 @@
+"""
+object.py
+
+The base class which all YunoObjects (mutables inside a document) inherit from.
+"""
+
 import typing
 import inspect
 import threading

@@ -1,3 +1,9 @@
+"""
+direction.py
+
+A set of enums to define the direction in a query.
+"""
+
 import pymongo
 import typing
 

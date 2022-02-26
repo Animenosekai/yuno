@@ -1,3 +1,9 @@
+"""
+collection.py
+
+A collection is a set of documents.
+"""
+
 import inspect
 import threading
 import typing

@@ -1,3 +1,9 @@
+"""
+string.py
+
+Manages string manipulation utilities.
+"""
+
 
 def toCamelCase(string: str):
     """

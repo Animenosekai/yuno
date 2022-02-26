@@ -1,10 +1,17 @@
-import typing
+"""
+watch.py
+
+Manages the watch cursor.
+"""
+
+
 import time
+import typing
+
 import pymongo.change_stream
 import pymongo.collection
 import pymongo.database
 import pymongo.mongo_client
-
 
 OperationType = typing.Literal["insert", "update", "delete", "replace", "drop", "rename", "dropDatabase", "invalidate"]
 

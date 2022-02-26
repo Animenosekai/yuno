@@ -1,3 +1,9 @@
+"""
+database.py
+
+A database holds multiple collections.
+"""
+
 import typing
 import threading
 import inspect

@@ -1,3 +1,8 @@
+"""
+logging.py
+
+Manages logging for yuno.
+"""
 import inspect
 import time
 

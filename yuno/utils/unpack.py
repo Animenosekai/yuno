@@ -1,3 +1,10 @@
+"""
+unpack.py
+
+Manages unpackable objects
+"""
+
+
 import typing
 
 

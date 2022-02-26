@@ -1,3 +1,9 @@
+"""
+client.py
+
+The client is what connects to MongoDB and provides the interface to interact with the database.
+"""
+
 import inspect
 import threading
 import typing

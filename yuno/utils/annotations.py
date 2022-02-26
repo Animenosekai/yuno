@@ -1,3 +1,9 @@
+"""
+annotations.py
+
+Manages annotations utilities.
+"""
+
 import typing
 
 

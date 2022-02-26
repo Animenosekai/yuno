@@ -1,3 +1,9 @@
+"""
+dict.py
+
+Contains the YunoDict class.
+"""
+
 import typing
 
 from yuno import utils

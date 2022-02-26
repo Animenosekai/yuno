@@ -1,8 +1,12 @@
+"""
+Cursor
+
+A cursor is a lazy iterator.
+"""
+
 import typing
 
 import pymongo.cursor
-
-from yuno import collection
 from yuno.direction import SortDirectionType, SortDirection
 
 

@@ -1,3 +1,9 @@
+"""
+launcher.py
+
+Manages MongoDB processes and configurations
+"""
+
 import atexit
 import pathlib
 import time

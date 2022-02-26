@@ -1,3 +1,9 @@
+"""
+list.py
+
+Contains the YunoList class.
+"""
+
 import typing
 from yuno import encoder
 from yuno.object import YunoObject

@@ -1,7 +1,10 @@
+"""
+encoder.py
 
+Contains the data encoding utilities.
+"""
 
 import datetime
-from inspect import isclass
 import io
 import re
 import typing
