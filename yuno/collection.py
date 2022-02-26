@@ -9,9 +9,6 @@ from yuno.cursor import Cursor
 from yuno.direction import IndexDirectionType, SortDirectionType
 from yuno.watch import OperationType, Watch
 
-BSONEncoder = encoder.YunoBSONEncoder()
-TypeEncoder = encoder.YunoTypeEncoder()
-
 
 class DocumentsCursor(Cursor):
     def next(self) -> "objects.YunoDict":
@@ -110,7 +107,7 @@ class YunoCollection(object):
         """
         filter = filter if filter is not None else {}
         filter.update(kwargs)
-        filter = {str(k): BSONEncoder.default(v) for k, v in filter.items()}
+        filter = {str(k): encoder.YunoBSONEncoder().default(v) for k, v in filter.items()}
         projection = {str(field): True for field in (include or [])}
         projection.update({str(field): False for field in (exclude or [])})
         if len(projection) > 0:
@@ -317,7 +314,7 @@ class YunoCollection(object):
         #    Updated Document
         #      {"_id": "special_document", "name": "Special Document"}
         """
-        self.__collection__.replace_one({"_id": name}, BSONEncoder.default(value), upsert=True)
+        self.__collection__.replace_one({"_id": name}, encoder.YunoBSONEncoder().default(value), upsert=True)
 
     def __setattr__(self, name: str, value: dict) -> None:
         """

@@ -39,7 +39,7 @@ According to Vermin (`--backport typing`), Python 3.8 is needed for `typing.Lite
 
 I haven't checked the minimum requirements for the MongoDB features used in this library yet but you should always use the latest versions for maximum security.
 
-Also this framework has been tested on MongoDB `v4.4.5` (locally) and MongoDB `v4.4.12` (on Atlas).
+Also this framework has been tested on MongoDB `v4.4.5` (locally), MongoDB `v4.4.12` (on Atlas) and the latest version of MongoDB on the [CI tests](https://github.com/Animenosekai/yuno/actions/workflows/pytest.yml).
 
 Always check if your Python version works with `yuno` before using it in production.
 
