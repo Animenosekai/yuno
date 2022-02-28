@@ -73,7 +73,7 @@ class TokenManager():
             else:
                 self.sign = None
 
-    def generate(self, user: str = None, expire: datetime.timedelta = datetime.timedelta(days=1), encryption: AES = None, data: dict = None, **kwargs) -> str:
+    def generate(self, user: str = None, expire: datetime.timedelta = datetime.timedelta(days=1), encryption: AES = None, extra: dict = None, **kwargs) -> str:
         """
         Generate a JWT token for the given user.
 
@@ -87,8 +87,8 @@ class TokenManager():
         encryption: yuno.security.encrypt.AES, default=None
             The encryption to use for the token
             If None, the token will not be encrypted
-        data: dict, default=None
-            The data to add to the token
+        extra: dict, default=None
+            Extra data to add to the token
             If None, no data will be added to the token
         **kwargs:
             Additional data to add to the token

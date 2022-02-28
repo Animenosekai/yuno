@@ -98,7 +98,7 @@ class Hasher():
 
 class PasswordHasher():
     """
-    A password hasher that uses Argon2id to securely hash passwords.
+    A password hasher which uses Argon2id to securely hash passwords.
     """
 
     def __init__(self, pepper: typing.Union[str, bytes, yuno.YunoClient, yuno.YunoDatabase, yuno.YunoCollection] = Default("RANDOM")) -> None:
@@ -124,7 +124,7 @@ class PasswordHasher():
                         "value": self.pepper
                     }
         else:
-            self.pepper = yuno.utils.security.check_key_type(pepper)
+            self.pepper = yuno.utils.security.check_key_type(pepper).hex()
         self.hasher = argon2.PasswordHasher()
 
     def hash(self, password: str, salt: str = None):
@@ -142,7 +142,7 @@ class PasswordHasher():
             password = "{password}{salt}".format(password=password, salt=salt)
         return self.hasher.hash("{pepper}{password}".format(pepper=self.pepper, password=password))
 
-    def verify(self, hashed: str, password: str, salt: str = None):
+    def verify(self, password: str, hashed: str, salt: str = None):
         """
         Verify the given password.
 
@@ -163,7 +163,7 @@ class PasswordHasher():
             return self.hasher.hash(password)
         return hashed
 
-    def is_equal(self, hashed: str, password: str, salt: str = None):
+    def is_equal(self, password: str, hashed: str, salt: str = None):
         """
         Check if the given password is equal to the hashed password.
 

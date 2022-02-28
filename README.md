@@ -686,7 +686,7 @@ hasher.hash("my_password", salt="my_salt")
 Two methods are provided to check if the given password is correct:
 
 ```python
->>> hasher.verify(hashed="$argon2id$v=19$m=102400,t=2,p=8$YKj47J7lty47hXrsgIwq0A$XWtTO+CtuSvEWrVph9ZrNQ", password="my_password", salt="my_salt")
+>>> hasher.verify(password="my_password", hashed="$argon2id$v=19$m=102400,t=2,p=8$YKj47J7lty47hXrsgIwq0A$XWtTO+CtuSvEWrVph9ZrNQ", salt="my_salt")
 '$argon2id$v=19$m=102400,t=2,p=8$YKj47J7lty47hXrsgIwq0A$XWtTO+CtuSvEWrVph9ZrNQ'
 ```
 
@@ -695,7 +695,7 @@ This function checks if the given password matches the given hashed password and
 This returned password can also be slightly different from the original hash because it will sometimes rehash it so make sure to update the hash password with the new one in the database.
 
 ```python
->>> hasher.is_equal(hashed="$argon2id$v=19$m=102400,t=2,p=8$YKj47J7lty47hXrsgIwq0A$XWtTO+CtuSvEWrVph9ZrNQ", password="my_password", salt="my_salt")
+>>> hasher.is_equal(password="my_password", hashed="$argon2id$v=19$m=102400,t=2,p=8$YKj47J7lty47hXrsgIwq0A$XWtTO+CtuSvEWrVph9ZrNQ", salt="my_salt")
 True
 ```
 
@@ -783,7 +783,7 @@ You should protect your databases and APIs and try to use some key rotation mech
 
 Yuno works on top of PyMongo to make all of the operations to MongoDB.
 
-It also uses 
+It also uses PyJWT for the JWT encoding and decoding, Argon2 for the hashing and encryption of the passwords, and PyCryptodome for the AES encryption.
 
 ## Deployment
 
@@ -802,6 +802,9 @@ Please make sure to update the tests as appropriate.
 - [PyMongo](https://docs.mongodb.com/drivers/pymongo/) - To connect to MongoDB databases and make operations
 - [psutil](https://github.com/giampaolo/psutil) - For cross-platform process management
 - [PyYAML](https://github.com/yaml/pyyaml) - To parse YAML files (MongoDB configuration files)
+- [argon2-cffi](https://github.com/hynek/argon2-cffi) - To hash and encrypt passwords with Argon2id
+- [PyJWT](https://github.com/jpadilla/pyjwt) - To encode and decode JWT tokens
+- [PyCryptodome](https://github.com/Legrandin/pycryptodome/) - To AES encrypt and decrypt data
 
 ## Authors
 
