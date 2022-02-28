@@ -1,13 +1,13 @@
-<img src="./docs/yuno_gasai.svg" alt="yuno_gasai" align="right" height="200px">
+
 
 # `yuno` (originally: `saki`)
+
+<img src="./docs/yuno_gasai.svg" alt="yuno_gasai" align="right" height="220px">
 
  An account and database management framework, completing Nasse
 
 ***Manipulate your databases as if you never leaved Python***
 
-<br>
-<br>
 <br>
 <br>
 
