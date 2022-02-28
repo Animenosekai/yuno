@@ -1,8 +1,15 @@
+<img src="./docs/yuno_gasai.svg" alt="yuno_gasai" align="right" height="200px">
+
 # `yuno` (originally: `saki`)
 
  An account and database management framework, completing Nasse
 
 ***Manipulate your databases as if you never leaved Python***
+
+<br>
+<br>
+<br>
+<br>
 
 [![PyPI version](https://badge.fury.io/py/yuno.svg)](https://pypi.org/project/yuno/)
 [![Downloads](https://static.pepy.tech/personalized-badge/yuno?period=total&units=international_system&left_color=grey&right_color=blue&left_text=Total%20Downloads)](https://pepy.tech/project/yuno)
