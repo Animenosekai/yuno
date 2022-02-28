@@ -583,9 +583,207 @@ object["key"] = {"hello": "world"}
 # will return True if the attribute exists
 ```
 
+## Security package
+
+Yuno being a framework, it also provides a set of tools to help you secure your data and logins for your users.
+
+They are all located under `yuno.security`.
+
+### Encrypt
+
+Encrypt is a module to encrypt your data using AES.  
+
+The key can be managed by the database and the token is made recognizable by the given prefix.
+
+#### Usage
+
+##### Encrypting
+
+```python
+>>> from yuno.security.encrypt import AES
+>>> encryption = AES(<your key>)
+>>> encryption.encrypt("hello world")
+'yuno+312e302e30,1f1d5944d37904e6fe0d129efc11207c,cbb99af1cfb54e08b31d4e,f4876580de57a521791bc0cc527c85cc'
+```
+
+You can also use your database to automatically create and store the key.
+
+```python
+>>> client = YunoClient(...)
+>>> encryption = AES(key=client)
+# the key will be randomly generated and stored in the database to be retrieved automatically when needed
+>>> encryption.encrypt("hello world")
+'yuno+312e302e30,1f1d5944d37904e6fe0d129efc11207c,cbb99af1cfb54e08b31d4e,f4876580de57a521791bc0cc527c85cc'
+```
+
+##### Decrypting
+
+```python
+>>> encryption.decrypt("yuno+312e302e30,1f1d5944d37904e6fe0d129efc11207c,cbb99af1cfb54e08b31d4e,f4876580de57a521791bc0cc527c85cc")
+'hello world'
+```
+
+#### Encryption Schema
+
+![Yuno AES Encryption Schema](./docs/yuno_aes_encryption_schema.png)
+
+### Hash
+
+You can also hash data and passwords using Yuno
+
+This is all located inside `yuno.security.hash`.
+
+#### Data
+
+The data hasher will use SHA-256 to hash your data.
+
+Create a `Hasher` instance.
+
+Four methods are available:
+
+- `hash`: Which will automatically detect which method to use.
+- `hash_string`: To hash a string
+- `hash_bytes`: To hash a bytes object
+- `hash_buffer`: To hash an IO buffer (file for example).
+
+#### Password
+
+Yuno uses Argon2id, one of the strongest password hashing algorithms, to hash passwords.
+
+You can use it by creating an instance of `PasswordHasher`.
+
+When initializing the PasswordHasher, you will need to pass a `pepper`, a kind of system key, to alter the given passwords and make them unique to the server.
+
+The `pepper` parameter can also be a database object, in which case a random key will be generated and stored inside the database.
+
+#### Usage
+
+##### Hashing
+
+```python
+>>> from yuno.security.hash import PasswordHasher
+>>> hasher = PasswordHasher(pepper="my_pepper")
+>>> hasher.hash("my_password")
+'$argon2id$v=19$m=102400,t=2,p=8$YKj47J7lty47hXrsgIwq0A$XWtTO+CtuSvEWrVph9ZrNQ'
+```
+
+The hashed password follows the following schema:
+
+```
+ PEPPER + PASSWORD + SALT(*)
+```
+
+> (*) If provided when hashing, it's a per-password bias to make the password unique to an account for example.
+
+```python
+hasher.hash("my_password", salt="my_salt")
+```
+
+> the SALT can be for example an account ID
+
+##### Verifying
+
+Two methods are provided to check if the given password is correct:
+
+```python
+>>> hasher.verify(hashed="$argon2id$v=19$m=102400,t=2,p=8$YKj47J7lty47hXrsgIwq0A$XWtTO+CtuSvEWrVph9ZrNQ", password="my_password", salt="my_salt")
+'$argon2id$v=19$m=102400,t=2,p=8$YKj47J7lty47hXrsgIwq0A$XWtTO+CtuSvEWrVph9ZrNQ'
+```
+
+This function checks if the given password matches the given hashed password and returns the hashed password if it matches.
+
+This returned password can also be slightly different from the original hash because it will sometimes rehash it so make sure to update the hash password with the new one in the database.
+
+```python
+>>> hasher.is_equal(hashed="$argon2id$v=19$m=102400,t=2,p=8$YKj47J7lty47hXrsgIwq0A$XWtTO+CtuSvEWrVph9ZrNQ", password="my_password", salt="my_salt")
+True
+```
+
+Does basically the same thing as before but will do no verification, rehashing, whatsoever and will return `True` or `False` instead of raising an exception if the password don't match.
+
+### Tokens
+
+Finally, Yuno can also manage JWT Tokens.
+
+A JWT is basically a JSON object encoded which is base64 encoded and signed with a secret key.
+
+This way, anyone can read its content but nobody can modify it without the key.
+
+This is why Yuno also gives you the option to pass a `yuno.security.encrypt.AES` instance to encrypt the tokens with AES and make them unreadable to anyone without the key.
+
+#### Usage
+
+When initializing the `TokenManager`, you will need to pass a `key` which is the secret key used to sign the tokens.
+
+This can also be a database object, in which case the key will be generated and stored inside the database.
+
+You can also provide a `sign` parameter, which will further sign the token from within the its content by adding to each token a random signature.
+
+##### Generating
+
+```python
+>>> from yuno.security.token import TokenManager
+>>> token_manager = TokenManager(key="my_secret_key")
+>>> token_manager.generate(user="id-123", username="username-123", roles=["admin", "user"]) # and any extra data
+'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NDYwNDEwNDcsImV4cCI6MTY0NjEyNzQ0NywidXNlciI6ImlkLTEyMyIsInVzZXJuYW1lIjoidXNlcm5hbWUtMTIzIiwicm9sZXMiOlsiYWRtaW4iLCJ1c2VyIl19.2ddAuZU7ozW9_F2dz9JKZbxdsNZlFbkjm5WYiuJVuUo'
+```
+
+> with encryption
+
+```python
+>>> from yuno.security.encrypt import AES
+>>> aes = AES()
+>>> token_manager.generate(user="id-123", encryption=aes)
+'yuno+312e302e30,667dfc91d461177e673582969809d4a8,fdf3e9a34532ca63389a15bcae8d7c0373221d12e617b56a9136b1d9288f1f2da3020390c5657451357ab73607fc2040a87f4194b1abd84e8b6e9767e2ffc04ae5f70e2869c60138f8a0922f2e2f9b31f6e0913bb6b2b3e7e7b6679e55c865a4a9598016fc713e6eb48353cc61bc9954c897794ff4f29f50e0d2282a930e26b7ee7bb547428bbedef74e88a4f827eeab5564c883b7,82beee1f51fc1c1de408cc4a49c15f13'
+```
+
+##### Decoding
+
+```python
+>>> token_manager.decode("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NDYwNDEwNDcsImV4cCI6MTY0NjEyNzQ0NywidXNlciI6ImlkLTEyMyIsInVzZXJuYW1lIjoidXNlcm5hbWUtMTIzIiwicm9sZXMiOlsiYWRtaW4iLCJ1c2VyIl19.2ddAuZU7ozW9_F2dz9JKZbxdsNZlFbkjm5WYiuJVuUo")
+{'iat': 1646037825, 'exp': 1646124194, 'user': 'id-123', 'username': 'username-123', 'roles': ['admin', 'user']}
+```
+
+> with encryption
+
+```python
+>>> token_manager.decode("yuno+312e302e30,667dfc91d461177e673582969809d4a8,fdf3e9a34532ca63389a15bcae8d7c0373221d12e617b56a9136b1d9288f1f2da3020390c5657451357ab73607fc2040a87f4194b1abd84e8b6e9767e2ffc04ae5f70e2869c60138f8a0922f2e2f9b31f6e0913bb6b2b3e7e7b6679e55c865a4a9598016fc713e6eb48353cc61bc9954c897794ff4f29f50e0d2282a930e26b7ee7bb547428bbedef74e88a4f827eeab5564c883b7,82beee1f51fc1c1de408cc4a49c15f13")
+{'iat': 1646041175, 'exp': 1646127575, 'user': 'id-123'}
+```
+
+> When using the `sign` parameter, an extra signature will be added to the token.
+
+```python
+>>> token_manager = TokenManager("my_key", sign="my_sign")
+>>> token_manager.generate(user="id-123", username="username-123", roles=["admin", "user"])
+'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NDYwNDMwOTgsImV4cCI6MTY0NjEyOTQ5OCwidXNlciI6ImlkLTEyMyIsInJhbmQiOiI1N2IyZmVhODNlNjE1M2ZjIiwic2lnbiI6Ijg5MjQyZTdlOWNhMzAwMGU4M2NiZWUxMTQxZWQ4MTFhNGQ3M2NkNTliYTdkODE5ZjVkOTg2YzEzYzg5OGNjMzIiLCJ1c2VybmFtZSI6InVzZXJuYW1lLTEyMyIsInJvbGVzIjpbImFkbWluIiwidXNlciJdfQ.t0bL6_cqpZOeY2oJoBURSMhvagjRT3b_KlCBTFjFduI'
+>>> token_manager.decode('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NDYwNDMwOTgsImV4cCI6MTY0NjEyOTQ5OCwidXNlciI6ImlkLTEyMyIsInJhbmQiOiI1N2IyZmVhODNlNjE1M2ZjIiwic2lnbiI6Ijg5MjQyZTdlOWNhMzAwMGU4M2NiZWUxMTQxZWQ4MTFhNGQ3M2NkNTliYTdkODE5ZjVkOTg2YzEzYzg5OGNjMzIiLCJ1c2VybmFtZSI6InVzZXJuYW1lLTEyMyIsInJvbGVzIjpbImFkbWluIiwidXNlciJdfQ.t0bL6_cqpZOeY2oJoBURSMhvagjRT3b_KlCBTFjFduI')
+{'iat': 1646043098, 'exp': 1646129498, 'user': 'id-123', 'rand': '57b2fea83e6153fc', 'sign': '89242e7e9ca3000e83cbee1141ed811a4d73cd59ba7d819f5d986c13c898cc32', 'username': 'username-123', 'roles': ['admin', 'user']}
+```
+
+Notice that a `rand` and `sign` fields are added to the token.
+
+The `rand` field is random data as hex generated to be used in the `sign` field.
+
+The `sign` field is the signature of the token.
+
+It is a SHA-256 hashed concatenation of the `rand` field and the `sign` provided to the token manager.
+
+### Considerations
+
+The goal here is to increase the number of keys and biases to make cracking the tokens and hashes way harder to any attacker.
+
+![Yuno Security Layers](./docs/yuno_security_layers.png)
+
+As you can see, the JWT has the most layers because it is exposed to the public.
+
+You should protect your databases and APIs and try to use some key rotation mechanism for maximum security.
+
 ## How it works
 
 Yuno works on top of PyMongo to make all of the operations to MongoDB.
+
+It also uses 
 
 ## Deployment
 

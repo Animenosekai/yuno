@@ -2,3 +2,5 @@
 - with (__enter__/__exit__) syntax handling
 - improve compatibility to Python>=3.6 (for example: `typing.Literal` only on py>=3.8)
 - custom exceptions
+- write tests for the security module
+- write tests to improve coverage
