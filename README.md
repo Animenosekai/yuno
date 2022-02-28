@@ -755,10 +755,10 @@ You can also provide a `sign` parameter, which will further sign the token from 
 
 ```python
 >>> token_manager = TokenManager("my_key", sign="my_sign")
->>> token_manager.generate(user="id-123", username="username-123", roles=["admin", "user"])
+>>> token_manager.generate(sub="id-123", username="username-123", roles=["admin", "user"])
 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NDYwNDMwOTgsImV4cCI6MTY0NjEyOTQ5OCwidXNlciI6ImlkLTEyMyIsInJhbmQiOiI1N2IyZmVhODNlNjE1M2ZjIiwic2lnbiI6Ijg5MjQyZTdlOWNhMzAwMGU4M2NiZWUxMTQxZWQ4MTFhNGQ3M2NkNTliYTdkODE5ZjVkOTg2YzEzYzg5OGNjMzIiLCJ1c2VybmFtZSI6InVzZXJuYW1lLTEyMyIsInJvbGVzIjpbImFkbWluIiwidXNlciJdfQ.t0bL6_cqpZOeY2oJoBURSMhvagjRT3b_KlCBTFjFduI'
 >>> token_manager.decode('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NDYwNDMwOTgsImV4cCI6MTY0NjEyOTQ5OCwidXNlciI6ImlkLTEyMyIsInJhbmQiOiI1N2IyZmVhODNlNjE1M2ZjIiwic2lnbiI6Ijg5MjQyZTdlOWNhMzAwMGU4M2NiZWUxMTQxZWQ4MTFhNGQ3M2NkNTliYTdkODE5ZjVkOTg2YzEzYzg5OGNjMzIiLCJ1c2VybmFtZSI6InVzZXJuYW1lLTEyMyIsInJvbGVzIjpbImFkbWluIiwidXNlciJdfQ.t0bL6_cqpZOeY2oJoBURSMhvagjRT3b_KlCBTFjFduI')
-{'iat': 1646043098, 'exp': 1646129498, 'user': 'id-123', 'rand': '57b2fea83e6153fc', 'sign': '89242e7e9ca3000e83cbee1141ed811a4d73cd59ba7d819f5d986c13c898cc32', 'username': 'username-123', 'roles': ['admin', 'user']}
+{'iat': 1646043098, 'exp': 1646129498, 'sub': 'id-123', 'rand': '57b2fea83e6153fc', 'sign': '89242e7e9ca3000e83cbee1141ed811a4d73cd59ba7d819f5d986c13c898cc32', 'username': 'username-123', 'roles': ['admin', 'user']}
 ```
 
 Notice that a `rand` and `sign` fields are added to the token.

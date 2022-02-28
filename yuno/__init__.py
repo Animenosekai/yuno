@@ -13,7 +13,7 @@ __author__ = 'Anime no Sekai'
 __copyright__ = 'Copyright 2022, yuno'
 __credits__ = ['animenosekai']
 __license__ = 'MIT License'
-__version_tuple__ = (1, 0, 0)
+__version_tuple__ = (1, 1, 0)
 
 
 def __version_string__():
