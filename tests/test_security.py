@@ -15,10 +15,14 @@ def test_encrypt(client):
     assert aes.decrypt(aes.encrypt("test")) == "test"
     aes = yuno.security.encrypt.AES(key=client)
     assert aes.decrypt(aes.encrypt("test")) == "test"
-    diff_prefix = yuno.security.encrypt.AES(prefix="diff")
+    diff_prefix = yuno.security.encrypt.AES(key=aes.key, prefix="diff")
     assert aes.decrypt(diff_prefix.encrypt("test"), ignore_prefix=True) == "test"
     try:
         aes.decrypt("not a valid token")
+    except ValueError:
+        pass
+    try:
+        aes.decrypt(yuno.security.encrypt.AES().encrypt("should not be the right key"))
     except ValueError:
         pass
     yuno.security.encrypt.AES(key=secrets.token_bytes(16))
@@ -61,7 +65,10 @@ def test_token(client):
     token_manager = yuno.security.token.TokenManager()
     token = token_manager.generate(user="id-123", username="username-123", roles=["admin", "user"],
                                    main=True, extra={"hello": "world"}, float_test=1.5, int_test=2, hey={"hello": "world"})
-    assert token_manager.decode(token) == {
+    decoded = token_manager.decode(token)
+    decoded.pop("exp", None)
+    decoded.pop("iat", None)
+    assert decoded == {
         "user": "id-123",
         "username": "username-123",
         "roles": ["admin", "user"],

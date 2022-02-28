@@ -73,14 +73,14 @@ class TokenManager():
             else:
                 self.sign = None
 
-    def generate(self, user: str = None, expire: datetime.timedelta = datetime.timedelta(days=1), encryption: AES = None, extra: dict = None, **kwargs) -> str:
+    def generate(self, sub: str = None, expire: datetime.timedelta = datetime.timedelta(days=1), encryption: AES = None, extra: dict = None, **kwargs) -> str:
         """
         Generate a JWT token for the given user.
 
         Parameters
         ----------
-        user: str, default = None
-            The user to generate the token for
+        sub: str, default = None
+            The subject to generate the token for (generally the user id)
             If None, no user will be added to the token
         expire: datetime.timedelta, default=1 day
             The time after which the token will expire
@@ -97,8 +97,8 @@ class TokenManager():
             "iat": datetime.datetime.utcnow(),
             "exp": datetime.datetime.utcnow() + expire
         }
-        if user is not None:
-            result["user"] = user
+        if sub is not None:
+            result["sub"] = sub
         if self.sign:
             rand = secrets.token_bytes(8)
             result["rand"] = rand.hex()
