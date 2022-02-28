@@ -103,7 +103,7 @@ class TokenManager():
             rand = secrets.token_bytes(8)
             result["rand"] = rand.hex()
             result["sign"] = HASHER.hash_bytes(rand + self.sign)
-        result.update(data or {})
+        result.update(extra or {})
         result.update(kwargs)
         token = jwt.encode(result, self.key, algorithm="HS256", headers={"alg": "HS256", "typ": "JWT"})
         if encryption is None:

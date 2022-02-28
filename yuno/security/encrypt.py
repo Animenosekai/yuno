@@ -13,6 +13,7 @@ from yuno.utils.annotations import Default
 VERSION_HEX = yuno.__version_string__().encode("utf-8").hex()
 RANDOMIZING_TYPES = (Default, yuno.YunoClient, yuno.YunoDatabase, yuno.YunoCollection)
 
+
 class AES():
     """
     The AES Encryption Manager for yuno
@@ -101,7 +102,7 @@ class AES():
         if ignore_prefix:
             splitting = encrypted.split(self.PREFIX_SEPARATOR)
             if len(splitting) > 1:
-                encrypted = encrypted[1:]
+                encrypted = self.PREFIX_SEPARATOR.join(splitting[1:])
         else:
             if not encrypted.startswith(self.prefix):
                 raise ValueError("The given encrypted string does not start with the right prefix ({})".format(self.prefix))
