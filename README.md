@@ -817,6 +817,11 @@ Please make sure to update the tests as appropriate.
 
 - **Anime no Sekai** - *Initial work* - [Animenosekai](https://github.com/Animenosekai)
 
+## Acknowledgments
+
+Thank you [`Gratus`](https://fr.wikipedia.org/wiki/Utilisateur:Gratus) for your drawing of 'Yuno Gasai'
+> Personal work, CC BY-SA 4.0, https://commons.wikimedia.org/w/index.php?curid=64851976
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
