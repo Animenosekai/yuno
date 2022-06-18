@@ -95,7 +95,8 @@ class TokenManager():
         """
         result = {
             "iat": datetime.datetime.utcnow(),
-            "exp": datetime.datetime.utcnow() + expire
+            "exp": datetime.datetime.utcnow() + expire,
+            "data": {}
         }
         if sub is not None:
             result["sub"] = sub
@@ -103,8 +104,8 @@ class TokenManager():
             rand = secrets.token_bytes(8)
             result["rand"] = rand.hex()
             result["sign"] = HASHER.hash_bytes(rand + self.sign)
-        result.update(extra or {})
-        result.update(kwargs)
+        result["data"] = extra or {}
+        result["data"].update(kwargs)
         token = jwt.encode(result, self.key, algorithm="HS256", headers={"alg": "HS256", "typ": "JWT"})
         if encryption is None:
             return token

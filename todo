@@ -3,3 +3,4 @@
 - improve compatibility to Python>=3.6 (for example: `typing.Literal` only on py>=3.8)
 - custom exceptions
 - write tests to improve coverage
+- type switch

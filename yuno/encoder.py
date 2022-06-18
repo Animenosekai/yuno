@@ -97,7 +97,7 @@ class YunoBSONEncoder():
 
 T = typing.TypeVar("T")
 
-IMMUTABLES = (bool, int, bson.Int64, float, str, bson.Binary, bson.ObjectId, bson.DBRef, bson.Code)
+IMMUTABLES = (bool, bytes, int, bson.Int64, float, str, bson.Binary, bson.ObjectId, bson.DBRef, bson.Code)
 
 
 class YunoTypeEncoder():
