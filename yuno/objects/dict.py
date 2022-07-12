@@ -47,7 +47,7 @@ class YunoDict(_object.YunoObject, dict):
         data = {k: encoder.YunoTypeEncoder().default(
             v,
             _type=annotations.get(k, None),
-            field="{}.{}".format(self.__field__, k),
+            field="{}.{}".format(self.__field__, k) if self.__field__ else k,
             collection=self.__collection__,
             _id=self.__id__
         ) for k, v in data[0].items()}
@@ -64,7 +64,7 @@ class YunoDict(_object.YunoObject, dict):
                 self.__storage__[k] = encoder.YunoTypeEncoder().default(
                     self.__class__.__dict__[k],
                     _type=self.__annotations__.get(k, None),
-                    field="{}.{}".format(self.__field__, k),
+                    field="{}.{}".format(self.__field__, k) if self.__field__ else k,
                     collection=self.__collection__,
                     _id=self.__id__
                 )

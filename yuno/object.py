@@ -121,7 +121,7 @@ class YunoObject(object):
         if isinstance(data, encoder.LazyObject):
             data = self.__lazy_fetch__(data)
             data = encoder.YunoTypeEncoder().default(data, _type=self.__annotations__.get(name, None), field="{}.{}".format(
-                self.__field__, name), collection=self.__collection__, _id=self.__id__)
+                self.__field__, name) if self.__field__ else name, collection=self.__collection__, _id=self.__id__)
             self.__storage__.__setitem__(name, data)
         return data
 
@@ -159,7 +159,7 @@ class YunoObject(object):
     def __delitem__(self, name: str, update: bool = True) -> None:
         """Deletes the attribute 'name' from the database. Example: del document['name']"""
         if update:
-            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$unset": {"{}.{}".format(self.__field__, name): True}})
+            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$unset": {"{}.{}".format(self.__field__, name) if self.__field__ else name: True}})
         self.__storage__.__delitem__(name)
 
     def __delattr__(self, name: str) -> None:
