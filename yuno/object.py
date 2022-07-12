@@ -139,10 +139,10 @@ class YunoObject(object):
     def __setitem__(self, name: str, value: typing.Any, update: bool = True) -> None:
         """Sets the attribute 'name' to 'value' in the database. Example: document['name'] = value"""
         value = encoder.YunoTypeEncoder().default(value, _type=self.__annotations__.get(name, None), field="{}.{}".format(
-            self.__field__, name), collection=self.__collection__, _id=self.__id__)
+            self.__field__, name) if self.__field__ else name, collection=self.__collection__, _id=self.__id__)
         if update:
             self.__collection__.__collection__.update_one(
-                {"_id": self.__id__}, {"$set": {"{}.{}".format(self.__field__, name): encoder.YunoBSONEncoder().default(value)}})
+                {"_id": self.__id__}, {"$set": {"{}.{}".format(self.__field__, name) if self.__field__ else name: encoder.YunoBSONEncoder().default(value)}})
         self.__storage__.__setitem__(name, value)
 
     def __setattr__(self, name: str, value: typing.Any) -> None:
