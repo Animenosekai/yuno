@@ -68,7 +68,7 @@ def test_token(client):
     decoded = token_manager.decode(token)
     decoded.pop("exp", None)
     decoded.pop("iat", None)
-    assert decoded == {
+    assert decoded["data"] == {
         "user": "id-123",
         "username": "username-123",
         "roles": ["admin", "user"],
