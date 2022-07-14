@@ -159,7 +159,8 @@ class YunoObject(object):
     def __delitem__(self, name: str, update: bool = True) -> None:
         """Deletes the attribute 'name' from the database. Example: del document['name']"""
         if update:
-            self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$unset": {"{}.{}".format(self.__field__, name) if self.__field__ else name: True}})
+            self.__collection__.__collection__.update_one(
+                {"_id": self.__id__}, {"$unset": {"{}.{}".format(self.__field__, name) if self.__field__ else name: True}})
         self.__storage__.__delitem__(name)
 
     def __delattr__(self, name: str) -> None:
@@ -179,6 +180,10 @@ class YunoObject(object):
 
     def __ne__(self, obj: object) -> bool:
         return encoder.YunoBSONEncoder().default(self) != encoder.YunoBSONEncoder().default(obj)
+
+    def __iter__(self):
+        """Returns the object iterator"""
+        return self.__storage__.__iter__()
 
     def delete(self) -> None:
         """
