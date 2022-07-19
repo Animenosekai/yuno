@@ -131,9 +131,11 @@ class YunoTypeEncoder():
         length -= 1
         for index, (key, value) in enumerate(o.items()):
             if length > index:
-                o[str(key)] = self.default(o=value, _type=types[index], field="{}.{}".format(field, key) if field else key, collection=collection, _id=_id)
+                o[str(key)] = self.default(o=value, _type=types[index], field="{}.{}".format(
+                    field, key) if field else key, collection=collection, _id=_id)
             else:
-                o[str(key)] = self.default(o=value, _type=types[length], field="{}.{}".format(field, key) if field else key, collection=collection, _id=_id)
+                o[str(key)] = self.default(o=value, _type=types[length], field="{}.{}".format(
+                    field, key) if field else key, collection=collection, _id=_id)
         return CAST(_id=_id, collection=collection, field=field, data=o)
 
     def encode_iterable(self, i: typing.Iterable[typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
@@ -151,9 +153,11 @@ class YunoTypeEncoder():
         length -= 1
         for index, value in enumerate(i):
             if length > index:
-                i[index] = self.default(value, _types[index], field="{}.{}".format(field, index) if field else str(index), collection=collection, _id=_id)
+                i[index] = self.default(value, _types[index], field="{}.{}".format(field, index)
+                                        if field else str(index), collection=collection, _id=_id)
             else:
-                i[index] = self.default(value, _types[length], field="{}.{}".format(field, index) if field else str(index), collection=collection, _id=_id)
+                i[index] = self.default(value, _types[length], field="{}.{}".format(field, index)
+                                        if field else str(index), collection=collection, _id=_id)
         return CAST(_id=_id, collection=collection, field=field, data=i)
 
     def default(self, o: typing.Any, _type: T = None, field: str = "", collection=None, _id: str = None) -> T:
@@ -177,6 +181,22 @@ class YunoTypeEncoder():
             pass
 
         origin = typing.get_origin(_type)
+
+        try:
+            print("origin", origin)
+            print("args", _type.__args__)
+        except Exception:
+            pass
+
+        if origin == typing.Union:
+            if type(None) in _type.__args__ and o is None:
+                return None
+            for t in _type.__args__:
+                try:
+                    return self.default(o, t, field, collection, _id)
+                except Exception:
+                    continue
+            raise ValueError("Could not convert {} to {}".format(o, _type))
 
         # TODO: handle when origin == typing.Union
 
