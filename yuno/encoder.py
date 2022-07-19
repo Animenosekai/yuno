@@ -182,12 +182,6 @@ class YunoTypeEncoder():
 
         origin = typing.get_origin(_type)
 
-        try:
-            print("origin", origin)
-            print("args", _type.__args__)
-        except Exception:
-            pass
-
         if origin == typing.Union:
             if type(None) in _type.__args__ and o is None:
                 return None
