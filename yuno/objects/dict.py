@@ -5,6 +5,7 @@ Contains the YunoDict class.
 """
 
 import typing
+import collections.abc
 
 from yuno import utils
 from yuno.utils.annotations import Default
@@ -69,6 +70,9 @@ class YunoDict(_object.YunoObject, dict):
                     _id=self.__id__
                 )
 
+    def keys(self) -> collections.abc.KeysView:
+        return self.__storage__.keys()
+
     def get(self, name: str, default: typing.Any = None) -> typing.Any:
         """
         Returns the value of the 'name' field.
@@ -93,7 +97,10 @@ class YunoDict(_object.YunoObject, dict):
         #    Initial Document
         #      {'name': {'first': 'John'}}
         """
-        return self.__storage__.get(name, default)
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            return default
 
     def clear(self) -> None:
         """
