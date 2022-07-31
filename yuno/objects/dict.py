@@ -20,7 +20,7 @@ class YunoDict(_object.YunoObject, dict):
     """
     __storage__: dict
     __overwritten__ = _object.YunoObject.__overwritten__.union(
-        {"__fetch_from_db__", "__lazy_fetch__", "__post_verification__", "get", "clear", "pop", "popitem", "setdefault", "update", "to_dict"})
+        {"__fetch_from_db__", "__lazy_fetch__", "__post_verification__", "keys", "get", "clear", "pop", "popitem", "setdefault", "update", "to_dict"})
 
     def __lazy_fetch__(self, lazy_obj: encoder.LazyObject) -> typing.Any:
         pipeline = [{"$match": {"_id": encoder.YunoBSONEncoder().default(self.__id__)}}]
