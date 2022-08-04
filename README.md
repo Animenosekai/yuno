@@ -6,7 +6,7 @@
 
  An account and database management framework, completing Nasse
 
-***Manipulate your databases as if you never leaved Python***
+***Manipulate your databases as if you never left Python***
 
 <br>
 <br>
