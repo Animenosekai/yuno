@@ -12,9 +12,6 @@ import typing
 import bson
 from yuno import utils
 
-# from yuno.objects.dict import YunoDict
-
-
 class LazyObject():
     """
     An object representing a lazy loaded value in an object.
@@ -157,6 +154,8 @@ class YunoTypeEncoder():
         None
         """
         from yuno import objects
+        from yuno import object as _yuno_object
+        self.BASE_OBJECT = _yuno_object.YunoObject
         self.dict = objects.YunoDict
         self.list = objects.YunoList
         self.bson_encoder = YunoBSONEncoder()
@@ -186,20 +185,27 @@ class YunoTypeEncoder():
             CAST = self.dict
 
         if length <= 0:
-            return CAST(_id=_id, previous=previous, field=field, data={key: self.default(o=val, _type=get_annotations(CAST).get(key, None), field="{}.{}".format(field, key) if field else key, previous=previous, _id=_id) for key, val in dict(o).items()})
+            result = CAST(_id=_id, previous=previous, field=field, data={key: self.default(o=val, _type=get_annotations(CAST).get(key, None), field="{}.{}".format(field, key) if field else key, previous=previous, _id=_id) for key, val in dict(o).items()})
         elif length <= 2:
             key__type, value__type = (str, types[0]) if length == 1 else (types[0], types[1])
-            return CAST(_id=_id, previous=previous, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k) if field else k, previous=previous, _id=_id) for k, v in dict(o).items()})
-            # return self.DICT(field=field, yuno_document=document, values={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k)) for k, v in o.items()})
-        length -= 1
-        for index, (key, value) in enumerate(o.items()):
-            if length > index:
-                o[str(key)] = self.default(o=value, _type=types[index], field="{}.{}".format(
-                    field, key) if field else key, previous=previous, _id=_id)
-            else:
-                o[str(key)] = self.default(o=value, _type=types[length], field="{}.{}".format(
-                    field, key) if field else key, previous=previous, _id=_id)
-        return CAST(_id=_id, previous=previous, field=field, data=o)
+            result = CAST(_id=_id, previous=previous, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k) if field else k, previous=previous, _id=_id) for k, v in dict(o).items()})
+        else:
+            length -= 1
+            for index, (key, value) in enumerate(o.items()):
+                if length > index:
+                    o[str(key)] = self.default(o=value, _type=types[index], field="{}.{}".format(
+                        field, key) if field else key, previous=previous, _id=_id)
+                else:
+                    o[str(key)] = self.default(o=value, _type=types[length], field="{}.{}".format(
+                        field, key) if field else key, previous=previous, _id=_id)
+            result = CAST(_id=_id, previous=previous, field=field, data=o)
+        
+        
+        for key in result.__storage__:
+            element = result.__storage__[key]
+            if isinstance(element, self.BASE_OBJECT):
+                element.__previous__ = result
+        return result
 
     def encode_iterable(self, i: typing.Iterable[typing.Any], _type: T, field: str = "", previous=None, _id: str = None) -> T:
         """
@@ -226,16 +232,23 @@ class YunoTypeEncoder():
             CAST = self.list
 
         if length <= 0:
-            return CAST(_id=_id, previous=previous, field=field, data=[self.default(o=val, _type=get_annotations(CAST).get(index, None), field="{}.{}".format(field, index) if field else str(index), previous=previous, _id=_id) for index, val in enumerate(i)])
-        length -= 1
-        for index, value in enumerate(i):
-            if length > index:
-                i[index] = self.default(value, _types[index], field="{}.{}".format(field, index)
-                                        if field else str(index), previous=previous, _id=_id)
-            else:
-                i[index] = self.default(value, _types[length], field="{}.{}".format(field, index)
-                                        if field else str(index), previous=previous, _id=_id)
-        return CAST(_id=_id, previous=previous, field=field, data=i)
+            result = CAST(_id=_id, previous=previous, field=field, data=[self.default(o=val, _type=get_annotations(CAST).get(index, None), field="{}.{}".format(field, index) if field else str(index), previous=previous, _id=_id) for index, val in enumerate(i)])
+        else:
+            length -= 1
+            for index, value in enumerate(i):
+                if length > index:
+                    i[index] = self.default(value, _types[index], field="{}.{}".format(field, index)
+                                            if field else str(index), previous=previous, _id=_id)
+                else:
+                    i[index] = self.default(value, _types[length], field="{}.{}".format(field, index)
+                                            if field else str(index), previous=previous, _id=_id)
+
+            result = CAST(_id=_id, previous=previous, field=field, data=i)
+        
+        for element in result.__storage__:
+            if isinstance(element, self.BASE_OBJECT):
+                element.__previous__ = result
+        return result
 
     def default(self, o: typing.Any, _type: T = None, field: str = "", previous=None, _id: str = None) -> T:
         """

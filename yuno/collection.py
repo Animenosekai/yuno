@@ -135,7 +135,16 @@ class YunoCollection(object):
                     previous=self,
                     _id=name
                 ) for k, v in obj.items()}
-                return cast(_id=name, previous=self, field="", data=data)
+                result = cast(_id=name, previous=self, field="", data=data)
+                if isinstance(result.__storage__, list):
+                    for element in result.__storage__:
+                        if isinstance(element, (objects.YunoDict, objects.YunoList)):
+                            element.__previous__ = result
+                else:
+                    for element in result.__storage__.values():
+                        if isinstance(element, (objects.YunoDict, objects.YunoList)):
+                            element.__previous__ = result
+                return result
             return DocumentsCursor(self.__collection__.find(filter=filter, projection=projection, limit=limit, sort=sort), verification=type_encode)
 
         results: typing.List[objects.YunoDict] = []
@@ -145,6 +154,15 @@ class YunoCollection(object):
 
             annotations = encoder.get_annotations(cast)
 
+            # print("")
+            # print(["v", v,
+            #     "_type", annotations.get(k, None),
+            #     "field", k,
+            #     "previous", self,
+            #     "_id", name]
+            #  for k, v in doc.items())
+            # print("")
+
             data = {k: encoder.YunoTypeEncoder().default(
                 v,
                 _type=annotations.get(k, None),
@@ -153,8 +171,17 @@ class YunoCollection(object):
                 _id=name
             ) for k, v in doc.items()}
 
-            # results.append(TypeEncoder.default(doc, _type=cast, field="", previous=self, _id=name))
-            results.append(cast(_id=name, previous=self, field="", data=data))
+            result = cast(_id=name, previous=self, field="", data=data)
+            if isinstance(result.__storage__, list):
+                for element in result.__storage__:
+                    if isinstance(element, (objects.YunoDict, objects.YunoList)):
+                        element.__previous__ = result
+            else:
+                for key in result.__storage__:
+                    element = result.__storage__[key]
+                    if isinstance(element, (objects.YunoDict, objects.YunoList)):
+                        element.__previous__ = result
+            results.append(result)
         return results
 
     def index(self, keys: typing.Union[str, typing.List[typing.Tuple[str, IndexDirectionType]]], name: str = None, unique: bool = True, background: bool = True, sparse: bool = True, **kwargs) -> None:
