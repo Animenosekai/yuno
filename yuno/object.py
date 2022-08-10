@@ -54,6 +54,8 @@ class YunoObject(object):
     """Callbacks for real-time updating"""
     __collection__: "collection.YunoCollection"
     """The collection the document belongs to"""
+    __previous__: typing.Optional["YunoObject"]
+    """The previous object in the document"""
 
     def __fetch_from_db__(self) -> typing.Union[list, dict]:
         """
