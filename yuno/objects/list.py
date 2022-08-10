@@ -87,7 +87,7 @@ class YunoList(YunoObject, list):
                 data.get(i, encoder.LazyObject(i)),
                 _type=annotations.get(i, None),
                 field="{}.{}".format(self.__field__, i) if self.__field__ else str(i),
-                collection=self.__collection__,
+                previous=self,
                 _id=self.__id__
             )
             for i in iterating_list]
@@ -110,7 +110,7 @@ class YunoList(YunoObject, list):
         #      {'fruits': ["Apple", "Orange", "Strawberry"]}
         """
         o = encoder.YunoTypeEncoder().default(o, field="{}.{}".format(self.__field__, len(self.__storage__)) if self.__field__ else str(len(self.__storage__)),
-                                              collection=self.__collection__, _id=self.__id__)
+                                              previous=self, _id=self.__id__)
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$push": {self.__field__: encoder.YunoBSONEncoder().default(o)}})
         self.__storage__.append(o)
 
@@ -137,7 +137,7 @@ class YunoList(YunoObject, list):
         copied.insert(index, o)
         bson = encoder.YunoBSONEncoder().default(copied)
         copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, i) if self.__field__ else str(i),
-                                                    collection=self.__collection__, _id=self.__id__) for i, element in enumerate(bson)]
+                                                    previous=self, _id=self.__id__) for i, element in enumerate(bson)]
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
 
@@ -174,7 +174,7 @@ class YunoList(YunoObject, list):
         #      {'fruits': ["Apple", "Orange", "Strawberry", "Kiwi"]}
         """
         length = len(self.__storage__)
-        iterable = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, length + index) if self.__field__ else str(length + index), collection=self.__collection__, _id=self.__id__)
+        iterable = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, length + index) if self.__field__ else str(length + index), previous=self, _id=self.__id__)
                     for index, element in enumerate(iterable)]
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {
             "$push": {self.__field__: {"$each": encoder.YunoBSONEncoder().default(iterable)}}})
@@ -200,7 +200,7 @@ class YunoList(YunoObject, list):
         copied = self.__storage__.copy()
         value = copied.pop(index)
         bson = encoder.YunoBSONEncoder().default(copied)
-        copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), collection=self.__collection__, _id=self.__id__)
+        copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), previous=self, _id=self.__id__)
                   for index, element in enumerate(bson)]
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
@@ -227,7 +227,7 @@ class YunoList(YunoObject, list):
         try:
             self.__storage__.remove(value)
             bson = encoder.YunoBSONEncoder().default(self.__storage__)
-            copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), collection=self.__collection__, _id=self.__id__)
+            copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), previous=self, _id=self.__id__)
                       for index, element in enumerate(bson)]
             self.__storage__ = copied
         except ValueError:  # they are not raised by MongoDB
@@ -248,7 +248,7 @@ class YunoList(YunoObject, list):
         copied = self.__storage__.copy()
         copied.reverse()
         bson = encoder.YunoBSONEncoder().default(copied)
-        copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), collection=self.__collection__, _id=self.__id__)
+        copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), previous=self, _id=self.__id__)
                   for index, element in enumerate(bson)]
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
@@ -288,7 +288,7 @@ class YunoList(YunoObject, list):
         copied = self.__storage__.copy()
         copied.sort(key=key, reverse=reverse)
         bson = encoder.YunoBSONEncoder().default(copied)
-        copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), collection=self.__collection__, _id=self.__id__)
+        copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), previous=self, _id=self.__id__)
                   for index, element in enumerate(bson)]
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
@@ -302,7 +302,7 @@ class YunoList(YunoObject, list):
         """Multiplies the list by the given number. Example: ``document.fruits *= 2``"""
         copied = self.__storage__ * x
         bson = encoder.YunoBSONEncoder().default(copied)
-        copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), collection=self.__collection__, _id=self.__id__)
+        copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), previous=self, _id=self.__id__)
                   for index, element in enumerate(bson)]
         self.__collection__.__collection__.update_one({"_id": self.__id__}, {"$set": {self.__field__: bson}})
         self.__storage__ = copied
@@ -313,7 +313,7 @@ class YunoList(YunoObject, list):
         if isinstance(key, slice):
             copied = self.__storage__.__setitem__(key, value)
             bson = encoder.YunoBSONEncoder().default(copied)
-            copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), collection=self.__collection__, _id=self.__id__)
+            copied = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), previous=self, _id=self.__id__)
                       for index, element in enumerate(bson)]
             self.__collection__.__collection__.update_one({"_id": self.__id__}, {
                 "$set": {self.__field__: bson}})
@@ -325,7 +325,7 @@ class YunoList(YunoObject, list):
                     "$set": {"{}.{}".format(self.__field__, key) if self.__field__ else str(key): encoder.YunoBSONEncoder().default(value)}})
                 self.__storage__.__setitem__(key, value)
                 bson = encoder.YunoBSONEncoder().default(self.__storage__)
-                self.__storage__ = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), collection=self.__collection__, _id=self.__id__)
+                self.__storage__ = [encoder.YunoTypeEncoder().default(element, field="{}.{}".format(self.__field__, index) if self.__field__ else str(index), previous=self, _id=self.__id__)
                                     for index, element in enumerate(bson)]
             except ValueError as err:
                 raise TypeError("list indices must be integers or slices, not str") from err

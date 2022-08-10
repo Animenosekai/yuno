@@ -25,7 +25,7 @@ class YunoObject(object):
     """
     An object behaving like a Python object which is linked to the database to update stuff on the fly.
     """
-    __overwritten__: typing.Set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__defaults__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
+    __overwritten__: typing.Set[str] = {"__fetch_from_db__", "__lazy_fetch__", "__lazy__", "__overwritten__", "__defaults__", "__storage_attributes__", "__storage__", "__id__", "__field__", "__realtime__", "__callbacks__", "_watch_loop", "__collection__", "__previous__", "__annotations__", "__class__",  # __class__ needs to be added to return the current class from __getattribute__
                                         "__init__", "__getitem__", "__getattribute__", "__setitem__", "__setattr__", "__delitem__", "__delattr__", "__repr__", "__contains__", "__eq__", "__ne__", "delete", "reload", "watch", "on"}
     """All of the attributes defined by Yuno"""
 
@@ -88,7 +88,7 @@ class YunoObject(object):
         """
         raise NotImplementedError("This method should be implemented by the child class.")
 
-    def __init__(self, _id: typing.Union[bson.ObjectId, str, int, typing.Any], collection: "collection.YunoCollection", field: str = "", data: typing.Union[dict, list] = None) -> None:
+    def __init__(self, _id: typing.Union[bson.ObjectId, str, int, typing.Any], previous: typing.Union["collection.YunoCollection", "YunoObject"], field: str = "", data: typing.Union[dict, list] = None) -> None:
         """
         Initializes the object by fetching the data from the database and intializing it.
 
@@ -96,7 +96,7 @@ class YunoObject(object):
         ----------
         _id: bson.ObjectId | str | int | Any
             The _id of the master document.
-        collection: YunoCollection
+        previous: YunoCollection | YunoObject
             The collection the object belongs to.
         field: str, default=""
             The field the object belongs to.
@@ -104,7 +104,12 @@ class YunoObject(object):
             The data to initialize the object with. If None, the data will be fetched from the database.
         """
         super().__setattr__("__id__", _id)
-        super().__setattr__("__collection__", collection)
+        if isinstance(previous, YunoObject):
+            super().__setattr__("__collection__", previous.__collection__)
+            super().__setattr__("__previous__", previous)
+        else:
+            super().__setattr__("__collection__", previous)
+            super().__setattr__("__previous__", None)
         super().__setattr__("__field__", str(field).strip("."))  # strip is useful for the root path
 
         super().__setattr__("__storage__", data if data is not None else self.__fetch_from_db__())
@@ -121,7 +126,7 @@ class YunoObject(object):
         if isinstance(data, encoder.LazyObject):
             data = self.__lazy_fetch__(data)
             data = encoder.YunoTypeEncoder().default(data, _type=self.__annotations__.get(name, None), field="{}.{}".format(
-                self.__field__, name) if self.__field__ else name, collection=self.__collection__, _id=self.__id__)
+                self.__field__, name) if self.__field__ else name, previous=self, _id=self.__id__)
             self.__storage__.__setitem__(name, data)
         return data
 
@@ -139,7 +144,7 @@ class YunoObject(object):
     def __setitem__(self, name: str, value: typing.Any, update: bool = True) -> None:
         """Sets the attribute 'name' to 'value' in the database. Example: document['name'] = value"""
         value = encoder.YunoTypeEncoder().default(value, _type=self.__annotations__.get(name, None), field="{}.{}".format(
-            self.__field__, name) if self.__field__ else name, collection=self.__collection__, _id=self.__id__)
+            self.__field__, name) if self.__field__ else name, previous=self, _id=self.__id__)
         if update:
             self.__collection__.__collection__.update_one(
                 {"_id": self.__id__}, {"$set": {"{}.{}".format(self.__field__, name) if self.__field__ else name: encoder.YunoBSONEncoder().default(value)}})

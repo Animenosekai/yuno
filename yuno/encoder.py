@@ -21,9 +21,23 @@ class LazyObject():
     """
 
     def __init__(self, field: str) -> None:
+        """
+        Parameters
+        ----------
+        field: str
+        
+        Returns
+        -------
+        None
+        """
         self.field = str(field).strip(".")
 
     def __repr__(self) -> str:
+        """
+        Returns
+        -------
+        str
+        """
         return "LazyObject({})".format(self.field)
 
 
@@ -34,12 +48,12 @@ BSON_ENCODABLE = (bool, int, bson.Int64, float, str, bytes, datetime.datetime, b
 def get_annotations(o: object):
     """
     Internal function to get the annotations of an object.
-
+    
     Parameters
     ----------
-    o : object
+    o: object
         The object to get the annotations of.
-
+    
     Returns
     -------
     dict[str, Any]
@@ -54,19 +68,39 @@ class YunoBSONEncoder():
     """
 
     def __init__(self) -> None:
+        """
+        Returns
+        -------
+        None
+        """
         """To initialize the encoder."""
         from yuno import object  # noqa
         self.object = object.YunoObject
 
     def encode_dict(self, o: typing.Dict[typing.Any, typing.Any]):
+        """
+        Parameters
+        ----------
+        o: typing.Dict[typing.Any, typing.Any]
+        """
         """Correctly encoding an unpackable value"""
         return {str(k): self.default(v) for k, v in o.items()}
 
     def encode_iterable(self, i: typing.Iterable[typing.Any]):
+        """
+        Parameters
+        ----------
+        i: typing.Iterable[typing.Any]
+        """
         """Encoding an iterable value"""
         return [self.default(x) for x in i]
 
     def encode_file(self, f: io.BytesIO):
+        """
+        Parameters
+        ----------
+        f: io.BytesIO
+        """
         """Correctly encoding a file."""
         position = f.tell()  # storing the current position
         content = f.read()  # read it (place the cursor at the end)
@@ -76,6 +110,15 @@ class YunoBSONEncoder():
         return str(content)
 
     def default(self, o: typing.Any) -> typing.Any:
+        """
+        Parameters
+        ----------
+        o: typing.Any
+        
+        Returns
+        -------
+        typing.Any
+        """
         """Encodes any value"""
         if o is None:
             return None
@@ -106,14 +149,34 @@ class YunoTypeEncoder():
     """
 
     def __init__(self) -> None:
-        """To initialize the encoder."""
+        """
+        To initialize the encoder.
+
+        Returns
+        -------
+        None
+        """
         from yuno import objects
         self.dict = objects.YunoDict
         self.list = objects.YunoList
         self.bson_encoder = YunoBSONEncoder()
 
-    def encode_dict(self, o: typing.Dict[typing.Any, typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
-        """Correctly encoding an unpackable value"""
+    def encode_dict(self, o: typing.Dict[typing.Any, typing.Any], _type: T, field: str = "", previous=None, _id: str = None) -> T:
+        """
+        Correctly encoding an unpackable value
+
+        Parameters
+        ----------
+        o: typing.Dict[typing.Any, typing.Any]
+        _type: T
+        field: str, default = ""
+        previous: default = None
+        _id: str, default = None
+        
+        Returns
+        -------
+        T
+        """
         types = typing.get_args(_type)
         length = len(types)
 
@@ -123,23 +186,37 @@ class YunoTypeEncoder():
             CAST = self.dict
 
         if length <= 0:
-            return CAST(_id=_id, collection=collection, field=field, data={key: self.default(o=val, _type=get_annotations(CAST).get(key, None), field="{}.{}".format(field, key) if field else key, collection=collection, _id=_id) for key, val in dict(o).items()})
+            return CAST(_id=_id, previous=previous, field=field, data={key: self.default(o=val, _type=get_annotations(CAST).get(key, None), field="{}.{}".format(field, key) if field else key, previous=previous, _id=_id) for key, val in dict(o).items()})
         elif length <= 2:
             key__type, value__type = (str, types[0]) if length == 1 else (types[0], types[1])
-            return CAST(_id=_id, collection=collection, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k) if field else k, collection=collection, _id=_id) for k, v in dict(o).items()})
+            return CAST(_id=_id, previous=previous, field=field, data={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k) if field else k, previous=previous, _id=_id) for k, v in dict(o).items()})
             # return self.DICT(field=field, yuno_document=document, values={self.default(k, key__type): self.default(v, value__type, field="{}.{}".format(field, k)) for k, v in o.items()})
         length -= 1
         for index, (key, value) in enumerate(o.items()):
             if length > index:
                 o[str(key)] = self.default(o=value, _type=types[index], field="{}.{}".format(
-                    field, key) if field else key, collection=collection, _id=_id)
+                    field, key) if field else key, previous=previous, _id=_id)
             else:
                 o[str(key)] = self.default(o=value, _type=types[length], field="{}.{}".format(
-                    field, key) if field else key, collection=collection, _id=_id)
-        return CAST(_id=_id, collection=collection, field=field, data=o)
+                    field, key) if field else key, previous=previous, _id=_id)
+        return CAST(_id=_id, previous=previous, field=field, data=o)
 
-    def encode_iterable(self, i: typing.Iterable[typing.Any], _type: T, field: str = "", collection=None, _id: str = None) -> T:
-        """Encoding an iterable value"""
+    def encode_iterable(self, i: typing.Iterable[typing.Any], _type: T, field: str = "", previous=None, _id: str = None) -> T:
+        """
+        Encoding an iterable value
+
+        Parameters
+        ----------
+        i: typing.Iterable[typing.Any]
+        _type: T
+        field: str, default = ""
+        previous: default = None
+        _id: str, default = None
+        
+        Returns
+        -------
+        T
+        """
         _types = typing.get_args(_type)
         length = len(_types)
 
@@ -149,19 +226,33 @@ class YunoTypeEncoder():
             CAST = self.list
 
         if length <= 0:
-            return CAST(_id=_id, collection=collection, field=field, data=[self.default(o=val, _type=get_annotations(CAST).get(index, None), field="{}.{}".format(field, index) if field else str(index), collection=collection, _id=_id) for index, val in enumerate(i)])
+            return CAST(_id=_id, previous=previous, field=field, data=[self.default(o=val, _type=get_annotations(CAST).get(index, None), field="{}.{}".format(field, index) if field else str(index), previous=previous, _id=_id) for index, val in enumerate(i)])
         length -= 1
         for index, value in enumerate(i):
             if length > index:
                 i[index] = self.default(value, _types[index], field="{}.{}".format(field, index)
-                                        if field else str(index), collection=collection, _id=_id)
+                                        if field else str(index), previous=previous, _id=_id)
             else:
                 i[index] = self.default(value, _types[length], field="{}.{}".format(field, index)
-                                        if field else str(index), collection=collection, _id=_id)
-        return CAST(_id=_id, collection=collection, field=field, data=i)
+                                        if field else str(index), previous=previous, _id=_id)
+        return CAST(_id=_id, previous=previous, field=field, data=i)
 
-    def default(self, o: typing.Any, _type: T = None, field: str = "", collection=None, _id: str = None) -> T:
-        """Encodes any value"""
+    def default(self, o: typing.Any, _type: T = None, field: str = "", previous=None, _id: str = None) -> T:
+        """
+        Encodes any value
+
+        Parameters
+        ----------
+        o: typing.Any
+        _type: T, default = None
+        field: str, default = ""
+        previous: default = None
+        _id: str, default = None
+        
+        Returns
+        -------
+        T
+        """
         if isinstance(o, LazyObject):
             return LazyObject(field.split(".")[-1])
 
@@ -187,7 +278,7 @@ class YunoTypeEncoder():
                 return None
             for t in _type.__args__:
                 try:
-                    return self.default(o, t, field, collection, _id)
+                    return self.default(o=o, _type=t, field=field, previous=previous, _id=_id)
                 except Exception:
                     continue
             raise ValueError("Could not convert {} to {}".format(o, _type))
@@ -205,15 +296,15 @@ class YunoTypeEncoder():
 
         if origin is not None:
             if issubclass(origin, dict) or isinstance(origin, dict):
-                return self.encode_dict(o=o, _type=_type, field=field, collection=collection, _id=_id)
+                return self.encode_dict(o=o, _type=_type, field=field, previous=previous, _id=_id)
             elif issubclass(origin, typing.Iterable) or isinstance(origin, typing.Iterable):
-                return self.encode_iterable(i=o, _type=_type, field=field, collection=collection, _id=_id)
+                return self.encode_iterable(i=o, _type=_type, field=field, previous=previous, _id=_id)
             return _type(o)
 
         if issubclass(_type, dict) or isinstance(_type, dict):
-            return self.encode_dict(o=o, _type=_type, field=field, collection=collection, _id=_id)
+            return self.encode_dict(o=o, _type=_type, field=field, previous=previous, _id=_id)
         elif issubclass(_type, typing.Iterable) or isinstance(_type, typing.Iterable):
-            return self.encode_iterable(i=o, _type=_type, field=field, collection=collection, _id=_id)
+            return self.encode_iterable(i=o, _type=_type, field=field, previous=previous, _id=_id)
 
         if given_type is None:
             return o

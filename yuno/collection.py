@@ -132,10 +132,10 @@ class YunoCollection(object):
                     v,
                     _type=annotations.get(k, None),
                     field=k,
-                    collection=self,
+                    previous=self,
                     _id=name
                 ) for k, v in obj.items()}
-                return cast(_id=name, collection=self, field="", data=data)
+                return cast(_id=name, previous=self, field="", data=data)
             return DocumentsCursor(self.__collection__.find(filter=filter, projection=projection, limit=limit, sort=sort), verification=type_encode)
 
         results: typing.List[objects.YunoDict] = []
@@ -149,12 +149,12 @@ class YunoCollection(object):
                 v,
                 _type=annotations.get(k, None),
                 field=k,
-                collection=self,
+                previous=self,
                 _id=name
             ) for k, v in doc.items()}
 
-            # results.append(TypeEncoder.default(doc, _type=cast, field="", collection=self, _id=name))
-            results.append(cast(_id=name, collection=self, field="", data=data))
+            # results.append(TypeEncoder.default(doc, _type=cast, field="", previous=self, _id=name))
+            results.append(cast(_id=name, previous=self, field="", data=data))
         return results
 
     def index(self, keys: typing.Union[str, typing.List[typing.Tuple[str, IndexDirectionType]]], name: str = None, unique: bool = True, background: bool = True, sparse: bool = True, **kwargs) -> None:
