@@ -430,7 +430,7 @@ class MongoDB(Configuration):
         extra = extra or {}
         extra.update({"--" + k: v for k, v in kwargs.items()})
         added_args = []
-        for k, v in extra:
+        for k, v in extra.items():
             if str(k).replace(" ", "") != "":
                 added_args.append(k)
             if str(v).replace(" ", "") != "":
