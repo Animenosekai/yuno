@@ -4,22 +4,20 @@ dict.py
 Contains the YunoDict class.
 """
 
-import typing
 import collections.abc
+import typing
 
-from bson import ObjectId
+from yuno import encoder
+from yuno import object as _object
 from yuno import utils
 from yuno.utils.annotations import Default
-from yuno import encoder
-
-from yuno import object as _object
 
 
 class YunoDict(_object.YunoObject, dict):
     """
     An object behaving like a Python dict which is linked to the database.
     """
-    _id: ObjectId
+    _id: typing.Any
     __storage__: dict
     __overwritten__ = _object.YunoObject.__overwritten__.union(
         {"__fetch_from_db__", "__lazy_fetch__", "__post_verification__", "keys", "get", "clear", "pop", "popitem", "setdefault", "update", "to_dict"})

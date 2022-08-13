@@ -274,6 +274,11 @@ class YunoTypeEncoder():
         if _type is None:
             _type = type(o)
 
+        if _type == typing.Any:
+            return o
+        elif _type == typing.AnyStr:
+            return str(o)
+
         # IMMUTABLES = (str, int, float, bool, bytes)
         if isinstance(_type, IMMUTABLES):
             _type = _type.__class__
