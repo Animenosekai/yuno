@@ -111,7 +111,6 @@ class AES():
             version, nonce, content, tag = [bytes.fromhex(element) for element in encrypted.split(self.SEPARATOR)]
         except Exception as err:
             raise ValueError("The given encrypted element is not valid") from err
-        print("aes", version, nonce, content, tag)
         self.cipher = __aes__.new(self.key, __aes__.MODE_GCM, nonce=nonce)
         decrypted = self.cipher.decrypt_and_verify(content, received_mac_tag=tag)
         if decode is not None:
