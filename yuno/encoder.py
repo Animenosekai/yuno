@@ -131,7 +131,7 @@ class YunoBSONEncoder():
         elif isinstance(o, typing.Iterable):
             return self.encode_iterable(o)
         else:
-            utils.logging.log("Object of type <{_type}> will be converted to str while encoding to JSON".format(_type=o.__class__.__name__))
+            utils.logging.log("Object of type <{_type}> will be converted to str while encoding to BSON".format(_type=o.__class__.__name__))
             return str(o)
 
 
